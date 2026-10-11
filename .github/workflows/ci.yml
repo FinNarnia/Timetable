@@ -1,0 +1,120 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # Обязательные проверки (критерии 16.5): линтер, типы, тесты в двух поясах, бюджет JS, e2e в трёх движках.
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test:coverage
+        env:
+          TZ: Europe/Moscow
+      - run: pnpm test
+        env:
+          TZ: America/New_York
+      - run: pnpm build
+      - run: pnpm check:bundle
+      - run: pnpm exec playwright install --with-deps chromium firefox webkit
+      - run: pnpm test:e2e
+        env:
+          E2E_ALL_BROWSERS: '1'
+          TZ: Europe/Moscow
+      - run: pnpm test:e2e
+        env:
+          TZ: America/New_York
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
+
+  # Эталонное окружение п. 15.2: Lighthouse CI и бенчмарки со строгими порогами ТЗ.
+  # Отдельное задание: критерий 18 — P2, его результат не блокирует публикацию.
+  perf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm build
+      - name: Lighthouse CI (LCP, доступность)
+        run: pnpm lighthouse
+      - name: Бенчмарки п. 15.2
+        run: pnpm test:e2e --grep @perf --retries 0
+        env:
+          PERF_STRICT: '1'
+          TZ: Europe/Moscow
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse
+          path: lighthouse/report
+          retention-days: 14
+
+  # Публикация на fin-narnia.online/timetable/ после зелёных проверок в ветке main.
+  deploy:
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    concurrency: deploy
+    env:
+      DEPLOY_PROTOCOL: ${{ secrets.DEPLOY_PROTOCOL }}
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      LFTP_PASSWORD: ${{ secrets.DEPLOY_PASSWORD }}
+      DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+      SITE_URL: https://fin-narnia.online/timetable/
+    steps:
+      - name: Доступы к хостингу заданы
+        run: |
+          for name in DEPLOY_HOST DEPLOY_USER LFTP_PASSWORD DEPLOY_PATH; do
+            if [ -z "${!name}" ]; then echo "::error::Не задан секрет ${name/LFTP_PASSWORD/DEPLOY_PASSWORD} (Settings → Secrets and variables → Actions)"; exit 1; fi
+          done
+          # Защита: загрузка с удалением старых файлов — только в папку приложения.
+          case "$DEPLOY_PATH" in */timetable|*/timetable/) ;; *) echo "::error::DEPLOY_PATH должен оканчиваться на /timetable"; exit 1;; esac
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: sudo apt-get update && sudo apt-get install -y apache2 lftp
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Сборка для /timetable/ и проверка на Apache с .htaccess
+        run: pnpm test:deploy
+      - name: Загрузка на хостинг
+        run: |
+          PROTOCOL="${DEPLOY_PROTOCOL:-sftp}"
+          DIR="${DEPLOY_PATH%/}"
+          # Сначала файлы сборки, затем index.html, затем удаление устаревших файлов — сайт не ломается посередине.
+          lftp -c "
+            set net:max-retries 3; set sftp:auto-confirm yes; set ftp:ssl-force true; set ssl:verify-certificate yes;
+            open --env-password -u \"$DEPLOY_USER\" $PROTOCOL://$DEPLOY_HOST;
+            mkdir -p -f \"$DIR\";
+            mirror --reverse --parallel=4 --exclude-glob index.html dist/ \"$DIR\";
+            put dist/index.html -o \"$DIR/index.html\";
+            mirror --reverse --delete dist/ \"$DIR\"
+          "
+      - name: Проверка опубликованного сайта
+        run: node deploy/check-live.mjs "$SITE_URL"
