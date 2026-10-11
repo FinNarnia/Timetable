@@ -1,0 +1,915 @@
+{
+  "format": "Эталонный набор для отчётов (п. 9, 16.1). Времена — локальные (YYYY-MM-DD HH:MM). percent: null означает «—». Описание — в README.md.",
+  "cases": [
+    {
+      "id": "R01",
+      "title": "Пустая текущая неделя: знаменатель 0, «Впереди», «По состоянию на сегодня»",
+      "today": "2026-10-14",
+      "profileCreated": "2026-09-01",
+      "reports": [
+        {
+          "period": "week:2026-10-12",
+          "expected": {
+            "range": ["2026-10-12", "2026-10-14"],
+            "asOfToday": true,
+            "canPrev": true,
+            "canNext": false,
+            "tasks": { "planned": 0, "done": 0, "missed": 0, "percent": null, "autoMoves": 0, "doneUndated": 0 },
+            "habits": { "planned": 0, "done": 0, "percent": null },
+            "days": {
+              "2026-10-12": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-10-13": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-10-14": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-10-15": "ahead",
+              "2026-10-16": "ahead",
+              "2026-10-17": "ahead",
+              "2026-10-18": "ahead"
+            },
+            "habitRows": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "R02",
+      "title": "Автоперенос; приложение не открывали несколько дней — пропуск один раз, в день fromDate",
+      "today": "2026-10-14",
+      "profileCreated": "2026-09-01",
+      "tasks": [
+        { "id": "t1", "date": "2026-10-05", "status": "completed", "completed": "2026-10-05 09:00" },
+        { "id": "t2", "date": "2026-10-06", "status": "completed", "completed": "2026-10-06 18:00" },
+        { "id": "t3", "date": "2026-10-07", "status": "completed", "completed": "2026-10-07 12:00" },
+        { "id": "t4", "date": "2026-10-14", "status": "active" }
+      ],
+      "moves": [
+        { "task": "t3", "from": "2026-10-06", "to": "2026-10-07", "reason": "auto" },
+        { "task": "t4", "from": "2026-10-09", "to": "2026-10-10", "reason": "auto" },
+        { "task": "t4", "from": "2026-10-10", "to": "2026-10-11", "reason": "auto" },
+        { "task": "t4", "from": "2026-10-11", "to": "2026-10-14", "reason": "auto" }
+      ],
+      "reports": [
+        {
+          "period": "week:2026-10-05",
+          "expected": {
+            "range": ["2026-10-05", "2026-10-11"],
+            "asOfToday": false,
+            "canPrev": true,
+            "canNext": true,
+            "tasks": { "planned": 7, "done": 3, "missed": 4, "percent": 43, "autoMoves": 4, "doneUndated": 0 },
+            "days": {
+              "2026-10-05": { "tasks": [1, 1], "habits": [0, 0] },
+              "2026-10-06": { "tasks": [1, 2], "habits": [0, 0] },
+              "2026-10-07": { "tasks": [1, 1], "habits": [0, 0] },
+              "2026-10-08": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-10-09": { "tasks": [0, 1], "habits": [0, 0] },
+              "2026-10-10": { "tasks": [0, 1], "habits": [0, 0] },
+              "2026-10-11": { "tasks": [0, 1], "habits": [0, 0] }
+            }
+          }
+        },
+        {
+          "period": "week:2026-10-12",
+          "expected": {
+            "tasks": { "planned": 1, "done": 0, "missed": 0, "percent": 0, "autoMoves": 0, "doneUndated": 0 },
+            "days": {
+              "2026-10-12": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-10-13": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-10-14": { "tasks": [0, 1], "habits": [0, 0] }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "R03",
+      "title": "Три автопереноса и выполнение на 4-й день = 1 из 4, 25%",
+      "today": "2026-10-14",
+      "profileCreated": "2026-09-01",
+      "tasks": [{ "id": "t1", "date": "2026-10-08", "status": "completed", "completed": "2026-10-08 20:00" }],
+      "moves": [
+        { "task": "t1", "from": "2026-10-05", "to": "2026-10-06", "reason": "auto" },
+        { "task": "t1", "from": "2026-10-06", "to": "2026-10-07", "reason": "auto" },
+        { "task": "t1", "from": "2026-10-07", "to": "2026-10-08", "reason": "auto" }
+      ],
+      "reports": [
+        {
+          "period": "week:2026-10-05",
+          "expected": {
+            "tasks": { "planned": 4, "done": 1, "missed": 3, "percent": 25, "autoMoves": 3, "doneUndated": 0 },
+            "days": {
+              "2026-10-05": { "tasks": [0, 1], "habits": [0, 0] },
+              "2026-10-06": { "tasks": [0, 1], "habits": [0, 0] },
+              "2026-10-07": { "tasks": [0, 1], "habits": [0, 0] },
+              "2026-10-08": { "tasks": [1, 1], "habits": [0, 0] },
+              "2026-10-09": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-10-10": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-10-11": { "tasks": [0, 0], "habits": [0, 0] }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "R04",
+      "title": "Ручной перенос не пропуск: задача учитывается в день, на который перенесена",
+      "today": "2026-10-14",
+      "profileCreated": "2026-09-01",
+      "tasks": [
+        { "id": "t1", "date": "2026-10-09", "status": "completed", "completed": "2026-10-09 11:00" },
+        { "id": "t2", "date": "2026-10-16", "status": "active" }
+      ],
+      "moves": [
+        { "task": "t1", "from": "2026-10-06", "to": "2026-10-09", "reason": "manual" },
+        { "task": "t2", "from": "2026-10-07", "to": "2026-10-16", "reason": "manual" }
+      ],
+      "reports": [
+        {
+          "period": "week:2026-10-05",
+          "expected": {
+            "tasks": { "planned": 1, "done": 1, "missed": 0, "percent": 100, "autoMoves": 0, "doneUndated": 0 },
+            "days": {
+              "2026-10-05": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-10-06": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-10-07": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-10-08": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-10-09": { "tasks": [1, 1], "habits": [0, 0] },
+              "2026-10-10": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-10-11": { "tasks": [0, 0], "habits": [0, 0] }
+            }
+          }
+        },
+        {
+          "period": "week:2026-10-12",
+          "expected": {
+            "tasks": { "planned": 0, "done": 0, "missed": 0, "percent": null, "autoMoves": 0, "doneUndated": 0 },
+            "days": { "2026-10-16": "ahead" }
+          }
+        }
+      ]
+    },
+    {
+      "id": "R05",
+      "title": "Удалённые задачи: прошлые дни их учитывают, сегодня — нет; удалённая до конца дня — не учитывается",
+      "today": "2026-10-14",
+      "profileCreated": "2026-09-01",
+      "tasks": [
+        { "id": "t1", "date": "2026-10-12", "status": "completed", "completed": "2026-10-12 10:00", "deleted": "2026-10-13 09:00" },
+        { "id": "t2", "date": "2026-10-14", "status": "active", "deleted": "2026-10-14 08:00" },
+        { "id": "t3", "date": "2026-10-14", "status": "completed", "completed": "2026-10-14 09:00", "deleted": "2026-10-14 09:30" },
+        { "id": "t4", "date": "2026-10-14", "status": "active", "deleted": "2026-10-14 10:00" },
+        { "id": "t5", "date": "2026-10-13", "status": "active", "deleted": "2026-10-13 12:00" },
+        { "id": "t6", "date": "2026-10-14", "status": "active" },
+        { "id": "t7", "date": "2026-10-16", "status": "active", "deleted": "2026-10-14 11:00" }
+      ],
+      "moves": [
+        { "task": "t2", "from": "2026-10-12", "to": "2026-10-13", "reason": "auto" },
+        { "task": "t2", "from": "2026-10-13", "to": "2026-10-14", "reason": "auto" }
+      ],
+      "reports": [
+        {
+          "period": "week:2026-10-12",
+          "expected": {
+            "tasks": { "planned": 4, "done": 1, "missed": 2, "percent": 25, "autoMoves": 2, "doneUndated": 0 },
+            "days": {
+              "2026-10-12": { "tasks": [1, 2], "habits": [0, 0] },
+              "2026-10-13": { "tasks": [0, 1], "habits": [0, 0] },
+              "2026-10-14": { "tasks": [0, 1], "habits": [0, 0] },
+              "2026-10-16": "ahead"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "R06",
+      "title": "Повторяющаяся задача: пропущенные экземпляры (в т. ч. удалённый), досрочно выполненный будущий экземпляр",
+      "today": "2026-10-14",
+      "profileCreated": "2026-09-01",
+      "tasks": [
+        { "id": "i05", "series": "s1", "date": "2026-10-05", "status": "completed", "completed": "2026-10-05 08:00" },
+        { "id": "i06", "series": "s1", "date": "2026-10-06", "status": "missed" },
+        { "id": "i07", "series": "s1", "date": "2026-10-07", "status": "missed", "deleted": "2026-10-13 10:00" },
+        { "id": "i08", "series": "s1", "date": "2026-10-08", "status": "completed", "completed": "2026-10-08 08:00" },
+        { "id": "i09", "series": "s1", "date": "2026-10-09", "status": "missed" },
+        { "id": "i10", "series": "s1", "date": "2026-10-10", "status": "completed", "completed": "2026-10-10 08:00" },
+        { "id": "i11", "series": "s1", "date": "2026-10-11", "status": "completed", "completed": "2026-10-11 08:00" },
+        { "id": "i12", "series": "s1", "date": "2026-10-12", "status": "missed" },
+        { "id": "i13", "series": "s1", "date": "2026-10-13", "status": "completed", "completed": "2026-10-13 08:00" },
+        { "id": "i14", "series": "s1", "date": "2026-10-14", "status": "active" },
+        { "id": "i15", "series": "s1", "date": "2026-10-15", "status": "active" },
+        { "id": "i16", "series": "s1", "date": "2026-10-16", "status": "completed", "completed": "2026-10-14 08:00" },
+        { "id": "i17", "series": "s1", "date": "2026-10-17", "status": "active" },
+        { "id": "i18", "series": "s1", "date": "2026-10-18", "status": "active" }
+      ],
+      "reports": [
+        {
+          "period": "week:2026-10-05",
+          "expected": {
+            "tasks": { "planned": 7, "done": 4, "missed": 3, "percent": 57, "autoMoves": 0, "doneUndated": 0 },
+            "days": {
+              "2026-10-05": { "tasks": [1, 1], "habits": [0, 0] },
+              "2026-10-06": { "tasks": [0, 1], "habits": [0, 0] },
+              "2026-10-07": { "tasks": [0, 1], "habits": [0, 0] },
+              "2026-10-08": { "tasks": [1, 1], "habits": [0, 0] },
+              "2026-10-09": { "tasks": [0, 1], "habits": [0, 0] },
+              "2026-10-10": { "tasks": [1, 1], "habits": [0, 0] },
+              "2026-10-11": { "tasks": [1, 1], "habits": [0, 0] }
+            }
+          }
+        },
+        {
+          "period": "week:2026-10-12",
+          "expected": {
+            "tasks": { "planned": 3, "done": 1, "missed": 1, "percent": 33, "autoMoves": 0, "doneUndated": 0 },
+            "days": {
+              "2026-10-12": { "tasks": [0, 1], "habits": [0, 0] },
+              "2026-10-13": { "tasks": [1, 1], "habits": [0, 0] },
+              "2026-10-14": { "tasks": [0, 1], "habits": [0, 0] },
+              "2026-10-15": "ahead",
+              "2026-10-16": "ahead",
+              "2026-10-17": "ahead",
+              "2026-10-18": "ahead"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "R07",
+      "title": "«Выполнено без срока»: по локальному дню completedAt, в процент не входит; удалённая сегодня — не считается",
+      "today": "2026-10-14",
+      "profileCreated": "2026-09-01",
+      "tasks": [
+        { "id": "u1", "date": null, "status": "completed", "completed": "2026-10-13 23:30" },
+        { "id": "u2", "date": null, "status": "completed", "completed": "2026-10-14 00:15" },
+        { "id": "u3", "date": null, "status": "completed", "completed": "2026-10-12 10:00", "deleted": "2026-10-13 10:00" },
+        { "id": "u4", "date": null, "status": "completed", "completed": "2026-10-14 09:00", "deleted": "2026-10-14 09:05" },
+        { "id": "u5", "date": null, "status": "active" },
+        { "id": "t1", "date": "2026-10-13", "status": "completed", "completed": "2026-10-13 15:00" }
+      ],
+      "reports": [
+        {
+          "period": "week:2026-10-12",
+          "expected": {
+            "tasks": { "planned": 1, "done": 1, "missed": 0, "percent": 100, "autoMoves": 0, "doneUndated": 3 },
+            "days": {
+              "2026-10-12": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-10-13": { "tasks": [1, 1], "habits": [0, 0] },
+              "2026-10-14": { "tasks": [0, 0], "habits": [0, 0] }
+            }
+          }
+        },
+        {
+          "period": "week:2026-10-05",
+          "expected": {
+            "tasks": { "planned": 0, "done": 0, "missed": 0, "percent": null, "autoMoves": 0, "doneUndated": 0 }
+          }
+        }
+      ]
+    },
+    {
+      "id": "R08",
+      "title": "Профиль создан в середине недели: расчётный диапазон, «Раньше» недоступна",
+      "today": "2026-10-14",
+      "profileCreated": "2026-10-07",
+      "tasks": [
+        { "id": "t1", "date": "2026-10-07", "status": "completed", "completed": "2026-10-07 10:00" },
+        { "id": "t2", "date": "2026-10-09", "status": "completed", "completed": "2026-10-09 10:00" }
+      ],
+      "moves": [{ "task": "t2", "from": "2026-10-08", "to": "2026-10-09", "reason": "auto" }],
+      "habits": [
+        { "id": "h1", "title": "Вода", "versions": [{ "from": "2026-10-07", "type": "daily" }], "checks": ["2026-10-07", "2026-10-08", "2026-10-10"] }
+      ],
+      "reports": [
+        {
+          "period": "week:2026-10-05",
+          "expected": {
+            "range": ["2026-10-07", "2026-10-11"],
+            "asOfToday": false,
+            "canPrev": false,
+            "canNext": true,
+            "tasks": { "planned": 3, "done": 2, "missed": 1, "percent": 67, "autoMoves": 1, "doneUndated": 0 },
+            "habits": { "planned": 5, "done": 3, "percent": 60 },
+            "days": {
+              "2026-10-05": "before",
+              "2026-10-06": "before",
+              "2026-10-07": { "tasks": [1, 1], "habits": [1, 1] },
+              "2026-10-08": { "tasks": [0, 1], "habits": [1, 1] },
+              "2026-10-09": { "tasks": [1, 1], "habits": [0, 1] },
+              "2026-10-10": { "tasks": [0, 0], "habits": [1, 1] },
+              "2026-10-11": { "tasks": [0, 0], "habits": [0, 1] }
+            },
+            "habitRows": [{ "id": "h1", "text": "3 из 5", "archived": false }]
+          }
+        },
+        {
+          "period": "week:2026-10-12",
+          "expected": {
+            "range": ["2026-10-12", "2026-10-14"],
+            "asOfToday": true,
+            "canPrev": true,
+            "canNext": false,
+            "tasks": { "planned": 0, "done": 0, "missed": 0, "percent": null, "autoMoves": 0, "doneUndated": 0 },
+            "habits": { "planned": 3, "done": 0, "percent": 0 },
+            "habitRows": [{ "id": "h1", "text": "0 из 3", "archived": false }]
+          }
+        },
+        {
+          "period": "month:2026-10",
+          "expected": {
+            "range": ["2026-10-07", "2026-10-14"],
+            "asOfToday": true,
+            "canPrev": false,
+            "canNext": false,
+            "tasks": { "planned": 3, "done": 2, "missed": 1, "percent": 67, "autoMoves": 1, "doneUndated": 0 },
+            "habits": { "planned": 8, "done": 3, "percent": 38 },
+            "cells": {
+              "2026-10-01": "before",
+              "2026-10-06": "before",
+              "2026-10-07": { "done": 2, "planned": 2, "percent": 100, "level": "75-100" },
+              "2026-10-08": { "done": 1, "planned": 2, "percent": 50, "level": "50-74" },
+              "2026-10-09": { "done": 1, "planned": 2, "percent": 50, "level": "50-74" },
+              "2026-10-10": { "done": 1, "planned": 1, "percent": 100, "level": "75-100" },
+              "2026-10-11": { "done": 0, "planned": 1, "percent": 0, "level": "0-24" },
+              "2026-10-14": { "done": 0, "planned": 1, "percent": 0, "level": "0-24" },
+              "2026-10-15": "ahead",
+              "2026-10-31": "ahead"
+            },
+            "habitRows": [{ "id": "h1", "text": "3 из 8", "percent": 38, "archived": false }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "R09",
+      "title": "Округление 0,5 вверх: 1 из 8 = 13%, 5 из 8 = 63%",
+      "today": "2026-10-14",
+      "profileCreated": "2026-09-01",
+      "tasks": [
+        { "id": "t1", "date": "2026-10-05", "status": "completed", "completed": "2026-10-05 10:00" },
+        { "id": "t2", "date": "2026-10-14", "status": "active" },
+        { "id": "t3", "date": "2026-10-14", "status": "active" },
+        { "id": "t4", "date": "2026-10-14", "status": "active" },
+        { "id": "t5", "date": "2026-10-14", "status": "active" },
+        { "id": "t6", "date": "2026-10-14", "status": "active" },
+        { "id": "t7", "date": "2026-10-14", "status": "active" },
+        { "id": "t8", "date": "2026-10-14", "status": "active" }
+      ],
+      "moves": [
+        { "task": "t2", "from": "2026-10-05", "to": "2026-10-14", "reason": "auto" },
+        { "task": "t3", "from": "2026-10-05", "to": "2026-10-14", "reason": "auto" },
+        { "task": "t4", "from": "2026-10-05", "to": "2026-10-14", "reason": "auto" },
+        { "task": "t5", "from": "2026-10-05", "to": "2026-10-14", "reason": "auto" },
+        { "task": "t6", "from": "2026-10-05", "to": "2026-10-14", "reason": "auto" },
+        { "task": "t7", "from": "2026-10-05", "to": "2026-10-14", "reason": "auto" },
+        { "task": "t8", "from": "2026-10-05", "to": "2026-10-14", "reason": "auto" }
+      ],
+      "habits": [
+        { "id": "h1", "title": "Зарядка", "versions": [{ "from": "2026-10-05", "type": "daily" }], "checks": ["2026-10-05", "2026-10-06", "2026-10-07", "2026-10-08", "2026-10-09"] },
+        { "id": "h2", "title": "Бассейн", "versions": [{ "from": "2026-10-05", "type": "weekdays", "weekdays": [1] }], "checks": [] }
+      ],
+      "reports": [
+        {
+          "period": "week:2026-10-05",
+          "expected": {
+            "tasks": { "planned": 8, "done": 1, "missed": 7, "percent": 13, "autoMoves": 7, "doneUndated": 0 },
+            "habits": { "planned": 8, "done": 5, "percent": 63 },
+            "days": {
+              "2026-10-05": { "tasks": [1, 8], "habits": [1, 2] },
+              "2026-10-06": { "tasks": [0, 0], "habits": [1, 1] },
+              "2026-10-07": { "tasks": [0, 0], "habits": [1, 1] },
+              "2026-10-08": { "tasks": [0, 0], "habits": [1, 1] },
+              "2026-10-09": { "tasks": [0, 0], "habits": [1, 1] },
+              "2026-10-10": { "tasks": [0, 0], "habits": [0, 1] },
+              "2026-10-11": { "tasks": [0, 0], "habits": [0, 1] }
+            },
+            "habitRows": [
+              { "id": "h1", "text": "5 из 7", "archived": false },
+              { "id": "h2", "text": "0 из 1", "archived": false }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "R10",
+      "title": "«Каждый день» и «По дням недели»; отметка в незапланированный день не считается",
+      "today": "2026-10-14",
+      "profileCreated": "2026-09-01",
+      "habits": [
+        { "id": "h1", "title": "Вода", "versions": [{ "from": "2026-09-01", "type": "daily" }], "checks": ["2026-10-05", "2026-10-06", "2026-10-07", "2026-10-09", "2026-10-10"] },
+        { "id": "h2", "title": "Бассейн", "versions": [{ "from": "2026-09-01", "type": "weekdays", "weekdays": [1, 3, 5] }], "checks": ["2026-10-05", "2026-10-07", "2026-10-08", "2026-10-09"] }
+      ],
+      "reports": [
+        {
+          "period": "week:2026-10-05",
+          "expected": {
+            "tasks": { "planned": 0, "done": 0, "missed": 0, "percent": null, "autoMoves": 0, "doneUndated": 0 },
+            "habits": { "planned": 10, "done": 8, "percent": 80 },
+            "days": {
+              "2026-10-05": { "tasks": [0, 0], "habits": [2, 2] },
+              "2026-10-06": { "tasks": [0, 0], "habits": [1, 1] },
+              "2026-10-07": { "tasks": [0, 0], "habits": [2, 2] },
+              "2026-10-08": { "tasks": [0, 0], "habits": [0, 1] },
+              "2026-10-09": { "tasks": [0, 0], "habits": [2, 2] },
+              "2026-10-10": { "tasks": [0, 0], "habits": [1, 1] },
+              "2026-10-11": { "tasks": [0, 0], "habits": [0, 1] }
+            },
+            "habitRows": [
+              { "id": "h1", "text": "5 из 7", "archived": false },
+              { "id": "h2", "text": "3 из 3", "archived": false }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "R11",
+      "title": "Смена дней недели с пн/ср/пт на вт/чт: прошлая неделя не меняется (п. 11.15)",
+      "today": "2026-10-14",
+      "profileCreated": "2026-09-01",
+      "habits": [
+        {
+          "id": "h1",
+          "title": "Бассейн",
+          "versions": [
+            { "from": "2026-09-01", "type": "weekdays", "weekdays": [1, 3, 5] },
+            { "from": "2026-10-12", "type": "weekdays", "weekdays": [2, 4] }
+          ],
+          "checks": ["2026-10-05", "2026-10-07", "2026-10-09", "2026-10-13"]
+        }
+      ],
+      "reports": [
+        {
+          "period": "week:2026-10-05",
+          "expected": {
+            "habits": { "planned": 3, "done": 3, "percent": 100 },
+            "days": {
+              "2026-10-05": { "tasks": [0, 0], "habits": [1, 1] },
+              "2026-10-06": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-10-07": { "tasks": [0, 0], "habits": [1, 1] },
+              "2026-10-08": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-10-09": { "tasks": [0, 0], "habits": [1, 1] },
+              "2026-10-10": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-10-11": { "tasks": [0, 0], "habits": [0, 0] }
+            },
+            "habitRows": [{ "id": "h1", "text": "3 из 3", "archived": false }]
+          }
+        },
+        {
+          "period": "week:2026-10-12",
+          "expected": {
+            "habits": { "planned": 1, "done": 1, "percent": 100 },
+            "days": {
+              "2026-10-12": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-10-13": { "tasks": [0, 0], "habits": [1, 1] },
+              "2026-10-14": { "tasks": [0, 0], "habits": [0, 0] }
+            },
+            "habitRows": [{ "id": "h1", "text": "1 из 1", "archived": false }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "R12",
+      "title": "Архив и возврат: день архивирования и промежуток в архиве в план не входят; архивная — с пометкой",
+      "today": "2026-10-14",
+      "profileCreated": "2026-09-01",
+      "habits": [
+        {
+          "id": "h1",
+          "title": "Вода",
+          "versions": [
+            { "from": "2026-09-01", "type": "daily" },
+            { "from": "2026-10-08", "archived": true },
+            { "from": "2026-10-10", "type": "daily" }
+          ],
+          "checks": ["2026-10-05", "2026-10-06", "2026-10-07", "2026-10-10"]
+        },
+        {
+          "id": "h2",
+          "title": "Медитация",
+          "versions": [
+            { "from": "2026-09-01", "type": "daily" },
+            { "from": "2026-10-09", "archived": true }
+          ],
+          "checks": ["2026-10-05", "2026-10-06", "2026-10-07", "2026-10-08"]
+        }
+      ],
+      "reports": [
+        {
+          "period": "week:2026-10-05",
+          "expected": {
+            "habits": { "planned": 9, "done": 8, "percent": 89 },
+            "days": {
+              "2026-10-05": { "tasks": [0, 0], "habits": [2, 2] },
+              "2026-10-06": { "tasks": [0, 0], "habits": [2, 2] },
+              "2026-10-07": { "tasks": [0, 0], "habits": [2, 2] },
+              "2026-10-08": { "tasks": [0, 0], "habits": [1, 1] },
+              "2026-10-09": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-10-10": { "tasks": [0, 0], "habits": [1, 1] },
+              "2026-10-11": { "tasks": [0, 0], "habits": [0, 1] }
+            },
+            "habitRows": [
+              { "id": "h1", "text": "4 из 5", "archived": false },
+              { "id": "h2", "text": "4 из 4", "archived": true }
+            ]
+          }
+        },
+        {
+          "period": "week:2026-10-12",
+          "expected": {
+            "habits": { "planned": 3, "done": 0, "percent": 0 },
+            "habitRows": [{ "id": "h1", "text": "0 из 3", "archived": false }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "R13",
+      "title": "«Цель на неделю»: отметки сверх цели процент не повышают; в дневные столбцы не входит",
+      "today": "2026-10-14",
+      "profileCreated": "2026-09-01",
+      "habits": [
+        { "id": "h1", "title": "Пробежка", "versions": [{ "from": "2026-09-01", "type": "weekly_target", "target": 3 }], "checks": ["2026-10-05", "2026-10-06", "2026-10-07", "2026-10-08"] }
+      ],
+      "reports": [
+        {
+          "period": "week:2026-10-05",
+          "expected": {
+            "habits": { "planned": 3, "done": 3, "percent": 100 },
+            "days": {
+              "2026-10-05": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-10-06": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-10-07": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-10-08": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-10-09": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-10-10": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-10-11": { "tasks": [0, 0], "habits": [0, 0] }
+            },
+            "habitRows": [{ "id": "h1", "text": "3 из 3", "archived": false }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "R14",
+      "title": "Текущая неделя, цель не достигнута: «2 из 3, неделя идёт», в процент не входит",
+      "today": "2026-10-14",
+      "profileCreated": "2026-09-01",
+      "habits": [
+        { "id": "h1", "title": "Пробежка", "versions": [{ "from": "2026-09-01", "type": "weekly_target", "target": 3 }], "checks": ["2026-10-12", "2026-10-13"] },
+        { "id": "h2", "title": "Вода", "versions": [{ "from": "2026-09-01", "type": "daily" }], "checks": ["2026-10-12", "2026-10-13", "2026-10-14"] }
+      ],
+      "reports": [
+        {
+          "period": "week:2026-10-12",
+          "expected": {
+            "habits": { "planned": 3, "done": 3, "percent": 100 },
+            "days": {
+              "2026-10-12": { "tasks": [0, 0], "habits": [1, 1] },
+              "2026-10-13": { "tasks": [0, 0], "habits": [1, 1] },
+              "2026-10-14": { "tasks": [0, 0], "habits": [1, 1] }
+            },
+            "habitRows": [
+              { "id": "h1", "text": "2 из 3, неделя идёт", "archived": false },
+              { "id": "h2", "text": "3 из 3", "archived": false }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "R15",
+      "title": "Текущая неделя, цель уже достигнута — входит в процент",
+      "today": "2026-10-14",
+      "profileCreated": "2026-09-01",
+      "habits": [
+        { "id": "h1", "title": "Пробежка", "versions": [{ "from": "2026-09-01", "type": "weekly_target", "target": 2 }], "checks": ["2026-10-12", "2026-10-14"] }
+      ],
+      "reports": [
+        {
+          "period": "week:2026-10-12",
+          "expected": {
+            "habits": { "planned": 2, "done": 2, "percent": 100 },
+            "habitRows": [{ "id": "h1", "text": "2 из 2", "archived": false }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "R16",
+      "title": "Неполная неделя (создана в пятницу): цель = min(цель, активные дни); новая цель — с понедельника",
+      "today": "2026-10-14",
+      "profileCreated": "2026-09-01",
+      "habits": [
+        { "id": "h1", "title": "Растяжка", "versions": [{ "from": "2026-10-09", "type": "weekly_target", "target": 5 }], "checks": ["2026-10-09", "2026-10-11"] },
+        {
+          "id": "h2",
+          "title": "Пробежка",
+          "versions": [
+            { "from": "2026-09-01", "type": "weekly_target", "target": 2 },
+            { "from": "2026-10-05", "type": "weekly_target", "target": 4 }
+          ],
+          "checks": ["2026-09-29", "2026-09-30", "2026-10-05", "2026-10-06", "2026-10-07"]
+        }
+      ],
+      "reports": [
+        {
+          "period": "week:2026-10-05",
+          "expected": {
+            "habits": { "planned": 7, "done": 5, "percent": 71 },
+            "habitRows": [
+              { "id": "h1", "text": "2 из 3", "archived": false },
+              { "id": "h2", "text": "3 из 4", "archived": false }
+            ]
+          }
+        },
+        {
+          "period": "week:2026-09-28",
+          "expected": {
+            "habits": { "planned": 2, "done": 2, "percent": 100 },
+            "habitRows": [{ "id": "h2", "text": "2 из 2", "archived": false }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "R17",
+      "title": "Месяц и «Цель на неделю»: неделя относится к месяцу своего четверга (ISO 8601)",
+      "today": "2026-11-04",
+      "profileCreated": "2026-09-01",
+      "habits": [
+        {
+          "id": "h1",
+          "title": "Пробежка",
+          "versions": [{ "from": "2026-09-01", "type": "weekly_target", "target": 3 }],
+          "checks": [
+            "2026-09-28", "2026-09-30", "2026-10-02",
+            "2026-10-06", "2026-10-08",
+            "2026-10-12", "2026-10-13", "2026-10-14", "2026-10-15",
+            "2026-10-31", "2026-11-01",
+            "2026-11-02", "2026-11-03"
+          ]
+        }
+      ],
+      "reports": [
+        {
+          "period": "month:2026-10",
+          "expected": {
+            "range": ["2026-10-01", "2026-10-31"],
+            "asOfToday": false,
+            "canPrev": true,
+            "canNext": true,
+            "habits": { "planned": 15, "done": 10, "percent": 67 },
+            "cells": { "2026-10-01": "none", "2026-10-15": "none", "2026-10-31": "none" },
+            "habitRows": [{ "id": "h1", "text": "10 из 15", "percent": 67, "archived": false }]
+          }
+        },
+        {
+          "period": "month:2026-09",
+          "expected": {
+            "range": ["2026-09-01", "2026-09-30"],
+            "canPrev": false,
+            "canNext": true,
+            "habits": { "planned": 12, "done": 0, "percent": 0 },
+            "habitRows": [{ "id": "h1", "text": "0 из 12", "percent": 0, "archived": false }]
+          }
+        },
+        {
+          "period": "month:2026-11",
+          "expected": {
+            "range": ["2026-11-01", "2026-11-04"],
+            "asOfToday": true,
+            "canNext": false,
+            "habits": { "planned": 0, "done": 0, "percent": null },
+            "habitRows": [{ "id": "h1", "text": "Нет запланированных", "percent": null, "running": "2 из 3, неделя идёт", "archived": false }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "R18",
+      "title": "Месячная сетка: значения и уровни ячеек, «нет плана», «впереди»; «Цель на неделю» в ячейки не входит",
+      "today": "2026-10-14",
+      "profileCreated": "2026-09-01",
+      "tasks": [
+        { "id": "m5a", "series": "s1", "date": "2026-10-05", "status": "missed" },
+        { "id": "m5b", "series": "s2", "date": "2026-10-05", "status": "missed" },
+        { "id": "m5c", "series": "s3", "date": "2026-10-05", "status": "missed" },
+        { "id": "c6", "date": "2026-10-06", "status": "completed", "completed": "2026-10-06 12:00" },
+        { "id": "m6a", "series": "s1", "date": "2026-10-06", "status": "missed" },
+        { "id": "m6b", "series": "s2", "date": "2026-10-06", "status": "missed" },
+        { "id": "m6c", "series": "s3", "date": "2026-10-06", "status": "missed" },
+        { "id": "m7", "series": "s1", "date": "2026-10-07", "status": "missed" },
+        { "id": "c8a", "date": "2026-10-08", "status": "completed", "completed": "2026-10-08 12:00" },
+        { "id": "c8b", "date": "2026-10-08", "status": "completed", "completed": "2026-10-08 13:00" },
+        { "id": "c8c", "date": "2026-10-08", "status": "completed", "completed": "2026-10-08 14:00" },
+        { "id": "m9a", "series": "s1", "date": "2026-10-09", "status": "missed" },
+        { "id": "m9b", "series": "s2", "date": "2026-10-09", "status": "missed" },
+        { "id": "m9c", "series": "s3", "date": "2026-10-09", "status": "missed" },
+        { "id": "c12", "date": "2026-10-12", "status": "completed", "completed": "2026-10-12 12:00" },
+        { "id": "c13a", "date": "2026-10-13", "status": "completed", "completed": "2026-10-13 12:00" },
+        { "id": "c13b", "date": "2026-10-13", "status": "completed", "completed": "2026-10-13 13:00" },
+        { "id": "m13", "series": "s1", "date": "2026-10-13", "status": "missed" },
+        { "id": "c14", "date": "2026-10-14", "status": "completed", "completed": "2026-10-14 09:00" },
+        { "id": "a14", "date": "2026-10-14", "status": "active" }
+      ],
+      "habits": [
+        { "id": "h1", "title": "Вода", "versions": [{ "from": "2026-10-05", "type": "daily" }], "checks": ["2026-10-06", "2026-10-07", "2026-10-09", "2026-10-10", "2026-10-13"] },
+        { "id": "h2", "title": "Пробежка", "versions": [{ "from": "2026-10-05", "type": "weekly_target", "target": 2 }], "checks": ["2026-10-11"] }
+      ],
+      "reports": [
+        {
+          "period": "month:2026-10",
+          "expected": {
+            "range": ["2026-10-01", "2026-10-14"],
+            "asOfToday": true,
+            "canPrev": true,
+            "canNext": false,
+            "tasks": { "planned": 20, "done": 8, "missed": 11, "percent": 40, "autoMoves": 0, "doneUndated": 0 },
+            "habits": { "planned": 12, "done": 6, "percent": 50 },
+            "cells": {
+              "2026-10-01": "none",
+              "2026-10-02": "none",
+              "2026-10-03": "none",
+              "2026-10-04": "none",
+              "2026-10-05": { "done": 0, "planned": 4, "percent": 0, "level": "0-24" },
+              "2026-10-06": { "done": 2, "planned": 5, "percent": 40, "level": "25-49" },
+              "2026-10-07": { "done": 1, "planned": 2, "percent": 50, "level": "50-74" },
+              "2026-10-08": { "done": 3, "planned": 4, "percent": 75, "level": "75-100" },
+              "2026-10-09": { "done": 1, "planned": 4, "percent": 25, "level": "25-49" },
+              "2026-10-10": { "done": 1, "planned": 1, "percent": 100, "level": "75-100" },
+              "2026-10-11": { "done": 0, "planned": 1, "percent": 0, "level": "0-24" },
+              "2026-10-12": { "done": 1, "planned": 2, "percent": 50, "level": "50-74" },
+              "2026-10-13": { "done": 3, "planned": 4, "percent": 75, "level": "75-100" },
+              "2026-10-14": { "done": 1, "planned": 3, "percent": 33, "level": "25-49" },
+              "2026-10-15": "ahead",
+              "2026-10-31": "ahead"
+            },
+            "cellLabel": { "2026-10-06": "6 октября: 2 из 5, 40%", "2026-10-01": "1 октября: нет плана", "2026-10-20": "20 октября: впереди" },
+            "habitRows": [
+              { "id": "h1", "text": "5 из 10", "percent": 50, "archived": false },
+              { "id": "h2", "text": "1 из 2", "percent": 50, "running": "0 из 2, неделя идёт", "archived": false }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "R19",
+      "title": "Нулевой знаменатель в прошлой неделе: «—», «Нет запланированных»",
+      "today": "2026-10-14",
+      "profileCreated": "2026-09-01",
+      "tasks": [{ "id": "u1", "date": null, "status": "completed", "completed": "2026-10-08 12:00" }],
+      "habits": [
+        { "id": "h1", "title": "Бассейн", "versions": [{ "from": "2026-10-10", "type": "weekdays", "weekdays": [1] }], "checks": [] }
+      ],
+      "reports": [
+        {
+          "period": "week:2026-10-05",
+          "expected": {
+            "tasks": { "planned": 0, "done": 0, "missed": 0, "percent": null, "autoMoves": 0, "doneUndated": 1 },
+            "habits": { "planned": 0, "done": 0, "percent": null },
+            "habitRows": [{ "id": "h1", "text": "Нет запланированных", "archived": false }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "R20",
+      "title": "Границы месяца для дневных показателей; неделя на стыке месяцев считается целиком",
+      "today": "2026-10-14",
+      "profileCreated": "2026-09-01",
+      "tasks": [
+        { "id": "t1", "date": "2026-09-30", "status": "completed", "completed": "2026-09-30 10:00" },
+        { "id": "t2", "date": "2026-10-01", "status": "completed", "completed": "2026-10-01 10:00" }
+      ],
+      "habits": [
+        { "id": "h1", "title": "Вода", "versions": [{ "from": "2026-09-29", "type": "daily" }], "checks": ["2026-09-29", "2026-09-30", "2026-10-01", "2026-10-02"] }
+      ],
+      "reports": [
+        {
+          "period": "month:2026-10",
+          "expected": {
+            "tasks": { "planned": 1, "done": 1, "missed": 0, "percent": 100, "autoMoves": 0, "doneUndated": 0 },
+            "habits": { "planned": 14, "done": 2, "percent": 14 },
+            "habitRows": [{ "id": "h1", "text": "2 из 14", "percent": 14, "archived": false }]
+          }
+        },
+        {
+          "period": "month:2026-09",
+          "expected": {
+            "tasks": { "planned": 1, "done": 1, "missed": 0, "percent": 100, "autoMoves": 0, "doneUndated": 0 },
+            "habits": { "planned": 2, "done": 2, "percent": 100 },
+            "cells": {
+              "2026-09-28": "none",
+              "2026-09-29": { "done": 1, "planned": 1, "percent": 100, "level": "75-100" },
+              "2026-09-30": { "done": 2, "planned": 2, "percent": 100, "level": "75-100" }
+            }
+          }
+        },
+        {
+          "period": "week:2026-09-28",
+          "expected": {
+            "range": ["2026-09-28", "2026-10-04"],
+            "tasks": { "planned": 2, "done": 2, "missed": 0, "percent": 100, "autoMoves": 0, "doneUndated": 0 },
+            "habits": { "planned": 6, "done": 4, "percent": 67 },
+            "days": {
+              "2026-09-28": { "tasks": [0, 0], "habits": [0, 0] },
+              "2026-09-29": { "tasks": [0, 0], "habits": [1, 1] },
+              "2026-09-30": { "tasks": [1, 1], "habits": [1, 1] },
+              "2026-10-01": { "tasks": [1, 1], "habits": [1, 1] },
+              "2026-10-02": { "tasks": [0, 0], "habits": [1, 1] },
+              "2026-10-03": { "tasks": [0, 0], "habits": [0, 1] },
+              "2026-10-04": { "tasks": [0, 0], "habits": [0, 1] }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "R21",
+      "title": "Привычка убрана в архив сегодня: сегодняшний день в план не входит, строка «в архиве»",
+      "today": "2026-10-14",
+      "profileCreated": "2026-09-01",
+      "habits": [
+        {
+          "id": "h1",
+          "title": "Вода",
+          "versions": [
+            { "from": "2026-09-01", "type": "daily" },
+            { "from": "2026-10-14", "archived": true }
+          ],
+          "checks": ["2026-10-12"]
+        }
+      ],
+      "reports": [
+        {
+          "period": "week:2026-10-12",
+          "expected": {
+            "habits": { "planned": 2, "done": 1, "percent": 50 },
+            "days": {
+              "2026-10-12": { "tasks": [0, 0], "habits": [1, 1] },
+              "2026-10-13": { "tasks": [0, 0], "habits": [0, 1] },
+              "2026-10-14": { "tasks": [0, 0], "habits": [0, 0] }
+            },
+            "habitRows": [{ "id": "h1", "text": "1 из 2", "archived": true }]
+          }
+        }
+      ]
+    },
+    {
+      "id": "R22",
+      "title": "Сегодня: «Осталось» — все активные задачи на сегодня, досрочно выполненная засчитывается сегодня",
+      "today": "2026-10-14",
+      "profileCreated": "2026-09-01",
+      "tasks": [
+        { "id": "t1", "date": "2026-10-14", "status": "completed", "completed": "2026-10-14 08:00" },
+        { "id": "t2", "date": "2026-10-14", "status": "active" },
+        { "id": "i1", "series": "s1", "date": "2026-10-14", "status": "active" },
+        { "id": "t3", "date": "2026-10-15", "status": "active" },
+        { "id": "t4", "date": "2026-10-14", "time": "07:00", "status": "active" }
+      ],
+      "reports": [
+        {
+          "period": "week:2026-10-12",
+          "expected": {
+            "tasks": { "planned": 4, "done": 1, "missed": 0, "percent": 25, "autoMoves": 0, "doneUndated": 0 },
+            "days": {
+              "2026-10-14": { "tasks": [1, 4], "habits": [0, 0] },
+              "2026-10-15": "ahead"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "R23",
+      "title": "«Цель на неделю»: архив во вторник и возврат в пятницу — цель = min(3, 4 активных дня)",
+      "today": "2026-10-14",
+      "profileCreated": "2026-09-01",
+      "habits": [
+        {
+          "id": "h1",
+          "title": "Пробежка",
+          "versions": [
+            { "from": "2026-09-01", "type": "weekly_target", "target": 3 },
+            { "from": "2026-10-06", "archived": true },
+            { "from": "2026-10-09", "type": "weekly_target", "target": 3 }
+          ],
+          "checks": ["2026-10-05", "2026-10-10"]
+        }
+      ],
+      "reports": [
+        {
+          "period": "week:2026-10-05",
+          "expected": {
+            "habits": { "planned": 3, "done": 2, "percent": 67 },
+            "habitRows": [{ "id": "h1", "text": "2 из 3", "archived": false }]
+          }
+        }
+      ]
+    }
+  ]
+}

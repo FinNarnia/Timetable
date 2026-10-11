@@ -1,0 +1,41 @@
+/* Дизайн-токены — вариант C «Ритм» (п. 1.5, 12.2). Тёмную тему можно добавить переопределением токенов. */
+:root {
+  --color-bg: #f4f5ef;
+  --color-surface: #ffffff;
+  --color-surface-muted: #e7e9e0;
+  --color-ink: #16181a;
+  --color-ink-inverse: #ffffff;
+  --color-muted: #55594f;
+  --color-muted-inverse: #c9ccc4;
+  --color-border: #c5c8be;
+  --color-accent: #c2410c;
+  --color-accent-text: #a8360a;
+  --color-ring: #ff7a3d;
+  --color-ring-track: #33363a;
+  --color-danger: #a8231a;
+  --color-danger-bg: #fdecea;
+  --color-warning-bg: #fff3e0;
+  --color-warning-ink: #7a3a00;
+  --color-success-bg: #e5f5ec;
+  --color-success-ink: #1d6b45;
+  --color-focus: #1f5fc9;
+
+  --font-display: 'Unbounded', system-ui, sans-serif;
+  --font-body: 'Onest', system-ui, sans-serif;
+
+  --radius-s: 12px;
+  --radius-m: 16px;
+  --radius-l: 20px;
+  --radius-xl: 28px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  --tap: 44px;
+  --content-max: 1200px;
+}
