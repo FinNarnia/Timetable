@@ -34,6 +34,15 @@ describe('вечернее уведомление (п. 10.1, 11.18)', () => {
     expect(await s.reminder.shownToday()).toBe(false);
   });
 
+  it('два изменения настроек подряд, не дожидаясь первого, оба сохраняются', async () => {
+    const env = await ready();
+    const s = env.services;
+    await s.profile.create('Анна');
+    await s.reminder.setEnabled(false);
+    await Promise.all([s.reminder.setEnabled(true), s.reminder.setTime('21:00')]);
+    expect(await s.reminder.current()).toMatchObject({ eveningReminderEnabled: true, eveningReminderTime: '21:00' });
+  });
+
   it('вкладка в фокусе — только внутреннее; без разрешения системное не показывается', async () => {
     const focused = await ready(undefined, new FakeNotifier('granted', false));
     await focused.services.profile.create('Анна');
