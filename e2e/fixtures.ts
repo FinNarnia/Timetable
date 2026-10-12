@@ -83,17 +83,24 @@ async function recordEvents(input: Locator) {
     }
     document.addEventListener('scroll', (e) => w.__ev.push(`scroll:${name(e.target)} ${box()}`), true);
     // Какие элементы диалога меняют высоту между нажатием кнопки мыши и получением фокуса.
-    let heights = new Map<Element, number>();
+    // Положение и размер элементов относительно диалога: что меняется между нажатием кнопки мыши и фокусом.
+    const geo = (el: Element) => {
+      const dlg = target.closest('dialog')!.getBoundingClientRect();
+      const r = el.getBoundingClientRect();
+      const cs = getComputedStyle(el);
+      return `${Math.round(r.top - dlg.top)}+${Math.round(r.height)} ${cs.display}/${cs.position}/${cs.visibility}`;
+    };
+    let before = new Map<Element, string>();
     const all = () => [...(target.closest('dialog')?.querySelectorAll('*') ?? [])];
-    document.addEventListener('pointerdown', () => (heights = new Map(all().map((el) => [el, el.getBoundingClientRect().height]))), true);
+    document.addEventListener('pointerdown', () => (before = new Map(all().map((el) => [el, geo(el)]))), true);
     document.addEventListener(
       'focusin',
       () => {
         const changed = all()
-          .filter((el) => heights.has(el) && Math.abs(heights.get(el)! - el.getBoundingClientRect().height) > 1)
-          .map((el) => `${name(el)}${el.id ? '#' + el.id : ''}:${Math.round(heights.get(el)!)}→${Math.round(el.getBoundingClientRect().height)}`);
-        const removed = [...heights.keys()].filter((el) => !el.isConnected).map((el) => name(el));
-        w.__ev.push(`resized=[${changed.slice(0, 8).join(', ')}] removed=[${removed.slice(0, 5).join(', ')}]`);
+          .filter((el) => before.has(el) && before.get(el) !== geo(el))
+          .map((el) => `${name(el)}${el.id ? '#' + el.id : ''}:${before.get(el)}→${geo(el)}`);
+        const added = all().filter((el) => !before.has(el)).map((el) => `${name(el)} ${geo(el)}`);
+        w.__ev.push(`changed=[${changed.slice(0, 14).join(', ')}] added=[${added.slice(0, 5).join(', ')}] removed=${[...before.keys()].filter((el) => !el.isConnected).length}`);
       },
       true,
     );
