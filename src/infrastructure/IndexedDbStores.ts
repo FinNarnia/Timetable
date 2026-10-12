@@ -76,15 +76,29 @@ export class IndexedDbDataStore implements DataStore {
     });
   }
 
+  /**
+   * Одна транзакция IndexedDB напрямую, без обёрток Dexie: все запросы ставятся сразу, без ожидания каждого.
+   * Для копии в 30 000 записей это заметно быстрее bulkAdd по таблицам (п. 15.2). Атомарность та же:
+   * ошибка любого запроса отменяет транзакцию целиком, прежние данные остаются.
+   */
   async replaceAll(data: DataSet): Promise<void> {
-    await guarded(() => this.db.transaction('rw', this.db.tables, async () => {
-      await Promise.all(this.db.tables.map((t) => t.clear()));
-      await this.db.profile.add(data.profile);
-      await this.db.settings.add(data.settings);
-      for (const name of ENTITY_COLLECTIONS) {
-        await this.db.table(name).bulkAdd(data[name]);
-      }
-    }));
+    await guarded(async () => {
+      await this.db.open();
+      const idb = this.db.backendDB();
+      const names = this.db.tables.map((t) => t.name);
+      await new Promise<void>((resolve, reject) => {
+        const tx = idb.transaction(names, 'readwrite');
+        tx.oncomplete = () => resolve();
+        tx.onabort = () => reject(tx.error ?? new DOMException('Транзакция отменена', 'AbortError'));
+        for (const name of names) tx.objectStore(name).clear();
+        tx.objectStore('profile').add(data.profile);
+        tx.objectStore('settings').add(data.settings);
+        for (const name of ENTITY_COLLECTIONS) {
+          const store = tx.objectStore(name);
+          for (const row of data[name]) store.add(row);
+        }
+      });
+    });
   }
 
   async clearAll(): Promise<void> {
