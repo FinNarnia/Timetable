@@ -1,4 +1,4 @@
-import { test as base, expect, type Page } from '@playwright/test';
+import { test as base, expect, type Locator, type Page } from '@playwright/test';
 
 /**
  * Общая фикстура: любая ошибка в консоли браузера или необработанное исключение
@@ -20,6 +20,31 @@ export const test = base.extend<{ consoleErrors: string[] }>({
 });
 
 export { expect };
+
+/**
+ * Выбор кнопки-«таблетки» (радио или флажок внутри label) так, как это делает человек: щелчком по видимой подписи.
+ * Состояние поля проверяется после щелчка. WebKit в CI не переключает скрытое поле при щелчке в его центр (locator.check).
+ */
+export async function pick(input: Locator, checked = true) {
+  if ((await input.isChecked()) === checked) return;
+  await input.locator('xpath=ancestor::label[1]').click();
+  await expect(input).toBeChecked({ checked });
+}
+
+/**
+ * Повторное открытие приложения в новой вкладке того же контекста вместо page.reload(): WebKit в CI падает
+ * или зависает на перезагрузке страницы с подменёнными часами. Часы общие для контекста, данные — в IndexedDB.
+ */
+export async function reopen(page: Page, errors: string[]): Promise<Page> {
+  const fresh = await page.context().newPage();
+  fresh.on('console', (msg) => {
+    if (msg.type() === 'error') errors.push(msg.text());
+  });
+  fresh.on('pageerror', (err) => errors.push(err.message));
+  await fresh.goto(page.url());
+  await page.close();
+  return fresh;
+}
 
 export async function createProfile(page: Page, name = 'Анна') {
   await page.goto('/');

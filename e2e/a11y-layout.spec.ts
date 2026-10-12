@@ -2,7 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Page } from '@playwright/test';
-import { chooseBackupFile, createProfile, expect, openSettings, seedReportCase, test } from './fixtures';
+import { chooseBackupFile, createProfile, expect, openSettings, pick, seedReportCase, test } from './fixtures';
 
 const WIDTHS = [360, 768, 1280] as const;
 const sample = readFileSync(resolve('fixtures/backups/sample.json'));
@@ -91,7 +91,7 @@ for (const width of WIDTHS) {
 
       await page.getByRole('button', { name: 'Подробнее…' }).click();
       const dialog = page.getByRole('dialog', { name: 'Новая задача' });
-      await dialog.getByRole('radio', { name: 'Дата и время' }).check();
+      await pick(dialog.getByRole('radio', { name: 'Дата и время' }));
       await dialog.getByRole('button', { name: 'Сохранить' }).click();
       await expect(dialog.getByText('Введите название задачи')).toBeVisible();
       await dialog.getByLabel('Категория', { exact: true }).selectOption({ label: '+ Новая категория' });

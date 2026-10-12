@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import type { Page } from '@playwright/test';
-import { createProfile, expect, test } from './fixtures';
+import { createProfile, expect, pick, reopen, test } from './fixtures';
 
 // Среда, 14 октября 2026 (неделя 12–18 октября).
 const WED = new Date('2026-10-14T09:00:00');
@@ -31,7 +31,8 @@ async function addHabit(
 }
 
 test.describe('привычки (раздел 8)', () => {
-  test('11.13: три типа; пустое состояние; без дней недели — ошибка; счётчик «0 из N»', async ({ page }) => {
+  test('11.13: три типа; пустое состояние; без дней недели — ошибка; счётчик «0 из N»', async ({ page: start, consoleErrors }) => {
+    let page = start;
     await page.clock.install({ time: WED });
     await createProfile(page);
     await openHabits(page);
@@ -62,11 +63,12 @@ test.describe('привычки (раздел 8)', () => {
     await expect(card(page, 'Пробежка').getByTestId('habit-counter')).toHaveText('0 из 2');
     await expect(page.locator('.habit-card .habit-title span[id]')).toHaveText(['Пить воду', 'Бассейн', 'Пробежка']);
 
-    await page.reload({ waitUntil: 'commit' }); // WebKit в CI иногда не дожидается события load после подмены часов
+    page = await reopen(page, consoleErrors);
     await expect(page.locator('.habit-card')).toHaveCount(3);
   });
 
-  test('11.14: отметка и снятие; недоступные дни объясняют причину; окно — 3 дня; счётчики и блок «Сегодня»', async ({ page }) => {
+  test('11.14: отметка и снятие; недоступные дни объясняют причину; окно — 3 дня; счётчики и блок «Сегодня»', async ({ page: start, consoleErrors }) => {
+    let page = start;
     await page.clock.install({ time: new Date('2026-10-05T09:00:00') }); // создаём в понедельник прошлой недели
     await createProfile(page);
     await openHabits(page);
@@ -76,7 +78,7 @@ test.describe('привычки (раздел 8)', () => {
       await d.getByRole('checkbox', { name: 'среда' }).check();
     });
     await page.clock.setSystemTime(WED);
-    await page.reload({ waitUntil: 'commit' }); // WebKit в CI иногда не дожидается события load после подмены часов
+    page = await reopen(page, consoleErrors);
     await expect(page.locator('.week-range')).toHaveText('12–18 октября');
 
     // Сегодня — отметка ставится и снимается.
@@ -123,11 +125,12 @@ test.describe('привычки (раздел 8)', () => {
     );
     await openHabits(page);
     await expect(circle(page, 'Бассейн', /^Среда, 14 октября/)).toHaveAccessibleName('Среда, 14 октября: выполнено');
-    await page.reload({ waitUntil: 'commit' }); // WebKit в CI иногда не дожидается события load после подмены часов
+    page = await reopen(page, consoleErrors);
     await expect(circle(page, 'Бассейн', /^Среда, 14 октября/)).toHaveAccessibleName('Среда, 14 октября: выполнено');
   });
 
-  test('11.15: смена дней пн/ср/пт → вт/чт: текущая неделя по новым дням, прошлая — по старым', async ({ page }) => {
+  test('11.15: смена дней пн/ср/пт → вт/чт: текущая неделя по новым дням, прошлая — по старым', async ({ page: start, consoleErrors }) => {
+    let page = start;
     await page.clock.install({ time: new Date('2026-10-05T09:00:00') });
     await createProfile(page);
     await openHabits(page);
@@ -135,12 +138,12 @@ test.describe('привычки (раздел 8)', () => {
       for (const day of ['понедельник', 'среда', 'пятница']) await d.getByRole('checkbox', { name: day }).check();
     });
     await page.clock.setSystemTime(WED);
-    await page.reload({ waitUntil: 'commit' }); // WebKit в CI иногда не дожидается события load после подмены часов
+    page = await reopen(page, consoleErrors);
     await page.getByRole('button', { name: 'Изменить привычку: Бассейн' }).click();
     const d = page.getByRole('dialog', { name: 'Изменить привычку' });
     await expect(d.getByText('Новое расписание действует с понедельника этой недели')).toBeVisible();
-    for (const day of ['понедельник', 'среда', 'пятница']) await d.getByRole('checkbox', { name: day }).uncheck();
-    for (const day of ['вторник', 'четверг']) await d.getByRole('checkbox', { name: day }).check();
+    for (const day of ['понедельник', 'среда', 'пятница']) await pick(d.getByRole('checkbox', { name: day }), false);
+    for (const day of ['вторник', 'четверг']) await pick(d.getByRole('checkbox', { name: day }));
     await d.getByRole('button', { name: 'Сохранить' }).click();
     await expect(d).toBeHidden();
 
@@ -152,7 +155,8 @@ test.describe('привычки (раздел 8)', () => {
     expect(await states()).toEqual([true, false, true, false, true, false, false]);
   });
 
-  test('архив: подтверждение, отмена 5 секунд, возврат из архива; ручной порядок', async ({ page }) => {
+  test('архив: подтверждение, отмена 5 секунд, возврат из архива; ручной порядок', async ({ page: start, consoleErrors }) => {
+    let page = start;
     await page.clock.install({ time: WED });
     await createProfile(page);
     await openHabits(page);
@@ -183,12 +187,12 @@ test.describe('привычки (раздел 8)', () => {
     await expect(page.locator('.habit-card .habit-title span[id]')).toHaveText(['В', 'А']);
     await page.locator('.archive-block summary').click();
     await expect(page.locator('.archive-item')).toContainText('Б');
-    await page.reload({ waitUntil: 'commit' }); // WebKit в CI иногда не дожидается события load после подмены часов
+    page = await reopen(page, consoleErrors);
     await nav(page).getByRole('link', { name: 'Сегодня' }).click();
     await expect(page.getByRole('region', { name: /^Привычки на сегодня/ }).locator('.today-habit-title')).toHaveText(['В', 'А']);
 
     await page.clock.setSystemTime(new Date('2026-10-15T09:00:00'));
-    await page.reload({ waitUntil: 'commit' }); // WebKit в CI иногда не дожидается события load после подмены часов
+    page = await reopen(page, consoleErrors);
     await openHabits(page);
     await page.locator('.archive-block summary').click();
     await page.getByRole('button', { name: 'Вернуть привычку «Б»' }).click();
