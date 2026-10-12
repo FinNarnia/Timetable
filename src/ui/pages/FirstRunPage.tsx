@@ -28,7 +28,8 @@ export function FirstRunPage() {
     setBusy(true);
     try {
       const profile = await services.profile.create(name);
-      await services.data.requestPersistence();
+      // Не ждём ответа: Firefox спрашивает разрешение у пользователя, и промис висит, пока тот не ответит (п. 4.5).
+      void services.data.requestPersistence().catch(() => undefined);
       setReady(profile);
     } catch (e) {
       if (e instanceof ValidationError) setError(e.message);

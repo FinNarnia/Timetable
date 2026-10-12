@@ -202,6 +202,8 @@ function DataBlock() {
 
   useEffect(() => {
     // Пока устойчивое хранилище не выдано, запрос повторяется при каждом открытии настроек (п. 4.5).
+    // Сначала текущий статус, затем запрос: в Firefox ответ ждёт решения пользователя (п. 4.5).
+    void services.data.persistenceStatus().then((status) => setPersistence((prev) => prev ?? status));
     void services.data.requestPersistence().then(setPersistence);
     void reload();
   }, [services, reload]);
