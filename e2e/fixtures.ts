@@ -23,94 +23,12 @@ export { expect };
 
 /**
  * Выбор кнопки-«таблетки» (радио или флажок внутри label) так, как это делает человек: щелчком по видимой подписи.
- * Состояние поля проверяется после щелчка. WebKit в CI не переключает скрытое поле при щелчке в его центр (locator.check).
+ * Состояние поля проверяется после щелчка.
  */
 export async function pick(input: Locator, checked = true) {
   if ((await input.isChecked()) === checked) return;
-  const webkit = input.page().context().browser()?.browserType().name() === 'webkit';
-  if (webkit) await recordEvents(input);
   await input.locator('xpath=ancestor::label[1]').click();
-  if (!webkit) {
-    await expect(input).toBeChecked({ checked });
-    return;
-  }
-  // Временная диагностика WebKit в CI: щелчок не меняет состояние поля. Собираем события и пробуем клавиатуру.
-  const byClick = await expect(input).toBeChecked({ checked, timeout: 2000 }).then(() => true, () => false);
-  if (byClick) return;
-  const afterClick = await input.page().evaluate(() => (window as unknown as { __ev: string[] }).__ev.splice(0));
-  await input.focus();
-  await input.press('Space');
-  const byKey = await expect(input).toBeChecked({ checked, timeout: 2000 }).then(() => true, () => false);
-  const afterKey = await input.page().evaluate(() => (window as unknown as { __ev: string[] }).__ev.splice(0));
-  throw new Error(
-    `WebKit-диагностика: щелчок по подписи не переключил поле; клавиша Space ${byKey ? 'переключила' : 'не переключила'}.\n` +
-      `События щелчка: ${afterClick.join(' | ')}\nСобытия клавиши: ${afterKey.join(' | ')}`,
-  );
-}
-
-async function recordEvents(input: Locator) {
-  await input.evaluate((target) => {
-    const w = window as unknown as { __ev: string[]; __evOn?: boolean };
-    w.__ev = [];
-    if (w.__evOn) return;
-    w.__evOn = true;
-    const name = (el: EventTarget | null) => {
-      if (!(el instanceof Element)) return String(el);
-      const extra = el instanceof HTMLInputElement ? `[${el.type}${el.checked ? ',on' : ''}]` : '';
-      return `${el.tagName.toLowerCase()}${el.className ? '.' + String(el.className).split(' ')[0] : ''}${extra}`;
-    };
-    const box = () => {
-      const dlg = document.querySelector('dialog[open]');
-      const r = target.getBoundingClientRect();
-      const d = dlg?.getBoundingClientRect();
-      const scrolled: string[] = [];
-      for (let el: Element | null = target; el; el = el.parentElement) if (el.scrollTop) scrolled.push(`${el.tagName.toLowerCase()}=${el.scrollTop}`);
-      const vv = window.visualViewport;
-      return (
-        `y=${Math.round(r.top)} dlg=${d ? `${Math.round(d.top)}+${Math.round(d.height)}` : '-'} scroll=${dlg ? dlg.scrollTop : '-'}/${Math.round(window.scrollY)}` +
-        ` anc=[${scrolled.join(',')}] vv=${vv ? `${Math.round(vv.offsetTop)},${Math.round(vv.pageTop)},${Math.round(vv.height)}` : '-'} active=${document.activeElement?.tagName.toLowerCase()}`
-      );
-    };
-    for (const type of ['pointerdown', 'mousedown', 'focusin', 'pointerup', 'mouseup', 'click', 'input', 'change', 'keydown']) {
-      document.addEventListener(
-        type,
-        (e) => {
-          const x = e instanceof MouseEvent ? ` @${Math.round(e.clientX)},${Math.round(e.clientY)} prevented=${e.defaultPrevented}` : '';
-          w.__ev.push(`${type}:${name(e.target)}${x} ${box()} checked=${(target as HTMLInputElement).checked}`);
-        },
-        true,
-      );
-    }
-    document.addEventListener('scroll', (e) => w.__ev.push(`scroll:${name(e.target)} ${box()}`), true);
-    // Какие элементы диалога меняют высоту между нажатием кнопки мыши и получением фокуса.
-    // Положение и размер элементов относительно диалога: что меняется между нажатием кнопки мыши и фокусом.
-    const geo = (el: Element) => {
-      const dlg = target.closest('dialog')!.getBoundingClientRect();
-      const r = el.getBoundingClientRect();
-      const cs = getComputedStyle(el);
-      return `${Math.round(r.top - dlg.top)}+${Math.round(r.height)} ${cs.display}/${cs.position}/${cs.visibility}`;
-    };
-    let before = new Map<Element, string>();
-    const all = () => [...(target.closest('dialog')?.querySelectorAll('*') ?? [])];
-    document.addEventListener('pointerdown', () => (before = new Map(all().map((el) => [el, geo(el)]))), true);
-    document.addEventListener(
-      'focusin',
-      () => {
-        const changed = all()
-          .filter((el) => before.has(el) && before.get(el) !== geo(el))
-          .map((el) => `${name(el)}${el.id ? '#' + el.id : ''}:${before.get(el)}→${geo(el)}`);
-        const added = all().filter((el) => !before.has(el)).map((el) => `${name(el)} ${geo(el)}`);
-        w.__ev.push(`changed=[${changed.slice(0, 14).join(', ')}] added=[${added.slice(0, 5).join(', ')}] removed=${[...before.keys()].filter((el) => !el.isConnected).length}`);
-      },
-      true,
-    );
-    new MutationObserver(() => w.__ev.push(`mutation ${box()} connected=${target.isConnected}`)).observe(target.closest('dialog') ?? document.body, {
-      subtree: true,
-      childList: true,
-      attributes: true,
-      attributeFilter: ['checked', 'class'],
-    });
-  });
+  await expect(input).toBeChecked({ checked });
 }
 
 /**
