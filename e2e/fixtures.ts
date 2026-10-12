@@ -62,7 +62,14 @@ async function recordEvents(input: Locator) {
     const box = () => {
       const dlg = document.querySelector('dialog[open]');
       const r = target.getBoundingClientRect();
-      return `y=${Math.round(r.top)} scroll=${dlg ? dlg.scrollTop : '-'}/${Math.round(window.scrollY)}`;
+      const d = dlg?.getBoundingClientRect();
+      const scrolled: string[] = [];
+      for (let el: Element | null = target; el; el = el.parentElement) if (el.scrollTop) scrolled.push(`${el.tagName.toLowerCase()}=${el.scrollTop}`);
+      const vv = window.visualViewport;
+      return (
+        `y=${Math.round(r.top)} dlg=${d ? `${Math.round(d.top)}+${Math.round(d.height)}` : '-'} scroll=${dlg ? dlg.scrollTop : '-'}/${Math.round(window.scrollY)}` +
+        ` anc=[${scrolled.join(',')}] vv=${vv ? `${Math.round(vv.offsetTop)},${Math.round(vv.pageTop)},${Math.round(vv.height)}` : '-'} active=${document.activeElement?.tagName.toLowerCase()}`
+      );
     };
     for (const type of ['pointerdown', 'mousedown', 'focusin', 'pointerup', 'mouseup', 'click', 'input', 'change', 'keydown']) {
       document.addEventListener(
