@@ -213,11 +213,14 @@ a:hover { color: #7f2908; }
 .welcome-title { font-size: 26px; }
 
 /* ---------- Диалоги, тосты, оверлей ---------- */
+/* Окно прижато к верху, а не по центру: Safari при первом фокусе внутри формы пересчитывает её высоту,
+   и центрированное окно сдвигается под курсором — щелчок по переключателю не засчитывается. */
 dialog.dialog {
   border: none; border-radius: var(--radius-l);
   padding: var(--space-6) var(--space-5);
   width: min(480px, calc(100vw - 32px));
-  max-height: calc(100vh - 32px);
+  margin-block: min(10vh, 64px) auto;
+  max-height: calc(100vh - min(10vh, 64px) - 16px);
   background: var(--color-surface); color: var(--color-ink);
 }
 dialog.dialog::backdrop { background: rgba(22, 24, 26, 0.55); }
