@@ -27,8 +27,61 @@ export { expect };
  */
 export async function pick(input: Locator, checked = true) {
   if ((await input.isChecked()) === checked) return;
+  const webkit = input.page().context().browser()?.browserType().name() === 'webkit';
+  if (webkit) await recordEvents(input);
   await input.locator('xpath=ancestor::label[1]').click();
-  await expect(input).toBeChecked({ checked });
+  if (!webkit) {
+    await expect(input).toBeChecked({ checked });
+    return;
+  }
+  // Временная диагностика WebKit в CI: щелчок не меняет состояние поля. Собираем события и пробуем клавиатуру.
+  const byClick = await expect(input).toBeChecked({ checked, timeout: 2000 }).then(() => true, () => false);
+  if (byClick) return;
+  const afterClick = await input.page().evaluate(() => (window as unknown as { __ev: string[] }).__ev.splice(0));
+  await input.focus();
+  await input.press('Space');
+  const byKey = await expect(input).toBeChecked({ checked, timeout: 2000 }).then(() => true, () => false);
+  const afterKey = await input.page().evaluate(() => (window as unknown as { __ev: string[] }).__ev.splice(0));
+  throw new Error(
+    `WebKit-диагностика: щелчок по подписи не переключил поле; клавиша Space ${byKey ? 'переключила' : 'не переключила'}.\n` +
+      `События щелчка: ${afterClick.join(' | ')}\nСобытия клавиши: ${afterKey.join(' | ')}`,
+  );
+}
+
+async function recordEvents(input: Locator) {
+  await input.evaluate((target) => {
+    const w = window as unknown as { __ev: string[]; __evOn?: boolean };
+    w.__ev = [];
+    if (w.__evOn) return;
+    w.__evOn = true;
+    const name = (el: EventTarget | null) => {
+      if (!(el instanceof Element)) return String(el);
+      const extra = el instanceof HTMLInputElement ? `[${el.type}${el.checked ? ',on' : ''}]` : '';
+      return `${el.tagName.toLowerCase()}${el.className ? '.' + String(el.className).split(' ')[0] : ''}${extra}`;
+    };
+    const box = () => {
+      const dlg = document.querySelector('dialog[open]');
+      const r = target.getBoundingClientRect();
+      return `y=${Math.round(r.top)} scroll=${dlg ? dlg.scrollTop : '-'}/${Math.round(window.scrollY)}`;
+    };
+    for (const type of ['pointerdown', 'mousedown', 'focusin', 'pointerup', 'mouseup', 'click', 'input', 'change', 'keydown']) {
+      document.addEventListener(
+        type,
+        (e) => {
+          const x = e instanceof MouseEvent ? ` @${Math.round(e.clientX)},${Math.round(e.clientY)} prevented=${e.defaultPrevented}` : '';
+          w.__ev.push(`${type}:${name(e.target)}${x} ${box()} checked=${(target as HTMLInputElement).checked}`);
+        },
+        true,
+      );
+    }
+    document.addEventListener('scroll', (e) => w.__ev.push(`scroll:${name(e.target)} ${box()}`), true);
+    new MutationObserver(() => w.__ev.push(`mutation ${box()} connected=${target.isConnected}`)).observe(target.closest('dialog') ?? document.body, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ['checked', 'class'],
+    });
+  });
 }
 
 /**

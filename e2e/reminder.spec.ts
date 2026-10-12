@@ -128,12 +128,15 @@ test.describe('11.18 Вечернее уведомление', () => {
     await page.clock.runFor('02:00');
     await expect(page.getByTestId('reminder')).toHaveCount(0);
 
+    // Включаем до 20:00: иначе проверка по таймеру успеет показать уведомление по старому времени,
+    // пока выбирается новое (в CI так и было — тест падал через раз).
+    await page.clock.setSystemTime(at('2026-10-14T19:50:00'));
     await openSettings(page);
     await page.getByRole('switch', { name: 'Вечернее напоминание о задачах на завтра' }).check();
     await page.getByLabel('Время', { exact: true }).selectOption('21:00');
     await page.reload();
     await expect(page.getByLabel('Время', { exact: true })).toHaveValue('21:00');
-    await page.clock.runFor('10:00'); // 20:42 — рано
+    await page.clock.runFor('52:00'); // 20:42 — старое время 20:00 прошло, новое ещё нет
     await expect(page.getByTestId('reminder')).toHaveCount(0);
     await page.clock.runFor('20:00'); // 21:02
     await expect(page.getByTestId('reminder')).toBeVisible();
