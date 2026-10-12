@@ -52,6 +52,26 @@ async function quickAdd(page: Page, title: string, target: 'Сегодня' | '�
   await expect(page.locator('.toast-region')).toContainText('Задача создана');
 }
 
+/** Настройка вечернего уведомления прямо из базы приложения: «on 21:00» / «off 20:00». */
+function savedReminder(page: Page): Promise<string> {
+  return page.evaluate(
+    () =>
+      new Promise<string>((resolve, reject) => {
+        const open = indexedDB.open('moy-ritm');
+        open.onerror = () => reject(open.error);
+        open.onsuccess = () => {
+          const req = open.result.transaction('settings', 'readonly').objectStore('settings').getAll();
+          req.onsuccess = () => {
+            open.result.close();
+            const s = req.result[0] as { eveningReminderEnabled: boolean; eveningReminderTime: string };
+            resolve(`${s.eveningReminderEnabled ? 'on' : 'off'} ${s.eveningReminderTime}`);
+          };
+          req.onerror = () => reject(req.error);
+        };
+      }),
+  );
+}
+
 test.describe('11.18 Вечернее уведомление', () => {
   test('две вкладки в 20:40: внутреннее в обеих, системное одно; «Посмотреть» — «Завтра»; после перезагрузки в 21:00 не повторяется', async ({ page, context }) => {
     await stubNotifications(context, 'granted', true);
@@ -134,6 +154,8 @@ test.describe('11.18 Вечернее уведомление', () => {
     await openSettings(page);
     await page.getByRole('switch', { name: 'Вечернее напоминание о задачах на завтра' }).check();
     await page.getByLabel('Время', { exact: true }).selectOption('21:00');
+    // Перезагружаем, когда настройка записана: иначе перезагрузка может прервать запись (в CI так и было).
+    await expect.poll(() => savedReminder(page)).toBe('on 21:00');
     await page.reload();
     await expect(page.getByLabel('Время', { exact: true })).toHaveValue('21:00');
     await page.clock.runFor('52:00'); // 20:42 — старое время 20:00 прошло, новое ещё нет
