@@ -6,9 +6,10 @@ const at = (s: string) => new Date(s);
 /** Результат запроса устойчивого хранилища задаётся тестом (п. 4.5): от него зависит срок напоминания. */
 async function persistence(context: BrowserContext, persisted: boolean) {
   await context.addInitScript((value) => {
-    if (!navigator.storage) return;
-    navigator.storage.persisted = () => Promise.resolve(value);
-    navigator.storage.persist = () => Promise.resolve(value);
+    const api = { persisted: () => Promise.resolve(value), persist: () => Promise.resolve(value) };
+    // В WebKit под Linux navigator.storage может не быть — подставляем целиком.
+    if (!navigator.storage) Object.defineProperty(Navigator.prototype, 'storage', { value: api, configurable: true });
+    else Object.assign(navigator.storage, api);
   }, persisted);
 }
 

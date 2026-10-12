@@ -62,7 +62,7 @@ test.describe('привычки (раздел 8)', () => {
     await expect(card(page, 'Пробежка').getByTestId('habit-counter')).toHaveText('0 из 2');
     await expect(page.locator('.habit-card .habit-title span[id]')).toHaveText(['Пить воду', 'Бассейн', 'Пробежка']);
 
-    await page.reload();
+    await page.reload({ waitUntil: 'commit' }); // WebKit в CI иногда не дожидается события load после подмены часов
     await expect(page.locator('.habit-card')).toHaveCount(3);
   });
 
@@ -76,7 +76,7 @@ test.describe('привычки (раздел 8)', () => {
       await d.getByRole('checkbox', { name: 'среда' }).check();
     });
     await page.clock.setSystemTime(WED);
-    await page.reload();
+    await page.reload({ waitUntil: 'commit' }); // WebKit в CI иногда не дожидается события load после подмены часов
     await expect(page.locator('.week-range')).toHaveText('12–18 октября');
 
     // Сегодня — отметка ставится и снимается.
@@ -123,7 +123,7 @@ test.describe('привычки (раздел 8)', () => {
     );
     await openHabits(page);
     await expect(circle(page, 'Бассейн', /^Среда, 14 октября/)).toHaveAccessibleName('Среда, 14 октября: выполнено');
-    await page.reload();
+    await page.reload({ waitUntil: 'commit' }); // WebKit в CI иногда не дожидается события load после подмены часов
     await expect(circle(page, 'Бассейн', /^Среда, 14 октября/)).toHaveAccessibleName('Среда, 14 октября: выполнено');
   });
 
@@ -135,7 +135,7 @@ test.describe('привычки (раздел 8)', () => {
       for (const day of ['понедельник', 'среда', 'пятница']) await d.getByRole('checkbox', { name: day }).check();
     });
     await page.clock.setSystemTime(WED);
-    await page.reload();
+    await page.reload({ waitUntil: 'commit' }); // WebKit в CI иногда не дожидается события load после подмены часов
     await page.getByRole('button', { name: 'Изменить привычку: Бассейн' }).click();
     const d = page.getByRole('dialog', { name: 'Изменить привычку' });
     await expect(d.getByText('Новое расписание действует с понедельника этой недели')).toBeVisible();
@@ -183,12 +183,12 @@ test.describe('привычки (раздел 8)', () => {
     await expect(page.locator('.habit-card .habit-title span[id]')).toHaveText(['В', 'А']);
     await page.locator('.archive-block summary').click();
     await expect(page.locator('.archive-item')).toContainText('Б');
-    await page.reload();
+    await page.reload({ waitUntil: 'commit' }); // WebKit в CI иногда не дожидается события load после подмены часов
     await nav(page).getByRole('link', { name: 'Сегодня' }).click();
     await expect(page.getByRole('region', { name: /^Привычки на сегодня/ }).locator('.today-habit-title')).toHaveText(['В', 'А']);
 
     await page.clock.setSystemTime(new Date('2026-10-15T09:00:00'));
-    await page.reload();
+    await page.reload({ waitUntil: 'commit' }); // WebKit в CI иногда не дожидается события load после подмены часов
     await openHabits(page);
     await page.locator('.archive-block summary').click();
     await page.getByRole('button', { name: 'Вернуть привычку «Б»' }).click();

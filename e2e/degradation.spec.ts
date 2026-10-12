@@ -77,6 +77,17 @@ test.describe('деградация необязательных API (п. 15.3)'
     await expect(page.getByText('Данные могут быть удалены браузером')).toBeVisible();
   });
 
+  test('persist() не отвечает (Firefox ждёт ответа пользователя): первый запуск не зависает', async ({ page, context }) => {
+    await context.addInitScript(() => {
+      if (!navigator.storage) return;
+      Object.defineProperty(navigator.storage, 'persisted', { value: () => Promise.resolve(false), configurable: true });
+      Object.defineProperty(navigator.storage, 'persist', { value: () => new Promise(() => {}), configurable: true });
+    });
+    await createProfile(page);
+    await openSettings(page);
+    await expect(page.getByTestId('persistence-status')).toHaveText('Браузер может удалить данные при нехватке места или долгом перерыве');
+  });
+
   test('без Web Worker: резервная копия проверяется в основном потоке и восстанавливается', async ({ page, context }) => {
     await disable(context, ['worker']);
     await createProfile(page, 'Борис');
