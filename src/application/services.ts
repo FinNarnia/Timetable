@@ -120,10 +120,13 @@ export class DataService {
 
   /** Отмечает, что копия скачана (для напоминания о копии, п. 4.3). */
   async markExported(): Promise<void> {
-    const settings = await this.d.repos.settings.get();
-    if (!settings) return;
-    const now = this.d.clock.nowIso();
-    await this.d.repos.settings.put({ ...settings, lastExportAt: now, updatedAt: now });
+    // Чтение и запись — одной транзакцией, чтобы не затереть одновременное изменение других настроек.
+    await this.d.uow.run(async () => {
+      const settings = await this.d.repos.settings.get();
+      if (!settings) return;
+      const now = this.d.clock.nowIso();
+      await this.d.repos.settings.put({ ...settings, lastExportAt: now, updatedAt: now });
+    });
   }
 
   /** Проверка файла: размер, формат, схема, согласованность. Ничего не пишет. */

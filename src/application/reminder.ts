@@ -22,7 +22,15 @@ export class ReminderService {
     return s;
   }
 
-  private async patch(change: Partial<UserSettings>): Promise<UserSettings> {
+  /**
+   * Чтение и запись — в одной транзакции: два быстрых изменения подряд (включить и сразу выбрать время)
+   * иначе читали бы одни и те же старые настройки, и второе затирало бы первое.
+   */
+  private patch(change: Partial<UserSettings>): Promise<UserSettings> {
+    return this.d.uow.run(() => this.patchNow(change));
+  }
+
+  private async patchNow(change: Partial<UserSettings>): Promise<UserSettings> {
     const next = { ...(await this.settings()), ...change, updatedAt: this.d.clock.nowIso() };
     await this.d.repos.settings.put(next);
     return next;
