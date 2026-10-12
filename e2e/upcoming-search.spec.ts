@@ -201,72 +201,76 @@ test.describe('поиск (п. 7.4)', () => {
     await expect(titles(page.getByTestId('search-results').getByRole('region', { name: /^Сегодня/ }))).toHaveText(['Старый отчёт']);
   });
 
-  test('@perf 5 000 задач: от окончания задержки ввода до показа результатов ≤ 100 мс (п. 15.2)', async ({ page, browserName }) => {
-    test.skip(browserName !== 'chromium', 'замеры и CDP — в Chromium');
-    test.setTimeout(240_000);
-    const dir = resolve('test-results/fixtures');
-    mkdirSync(dir, { recursive: true });
-    const file = resolve(dir, 'search-5000.json');
-    execFileSync('node', ['scripts/seed.mjs', '--tasks', '5000', '--checks', '0', '--habits', '0', '--out', file]);
-    await createProfile(page);
-    await openSettings(page);
-    await chooseBackupFile(page, 'Восстановить из копии', { name: 'search-5000.json', buffer: readFileSync(file) });
-    await page.getByRole('dialog', { name: 'Восстановить из копии?' }).getByRole('button', { name: 'Восстановить' }).click();
-    await expect(page.getByRole('heading', { level: 1, name: 'Настройки' })).toBeVisible({ timeout: 30_000 });
-    await openToday(page);
-    await expect(search(page)).toBeVisible();
+  test.describe('в обычном профиле браузера', () => {
+    test.use({ realProfile: true });
 
-    const measureSearch = async (label: string) => {
-      const timings: number[] = [];
-      // Первый запрос — прогрев (JIT); сравниваем медиану трёх замеров, как в бенчмарке обслуживания дня.
-      for (const q of ['номер 7', 'номер 12', 'НОМЕР 4', 'номер 999']) {
-        // Замер самого приложения (performance.measure 'moy-ritm:search'): от конца задержки ввода до кадра с результатами.
-        // Ввод — внутри страницы, без опроса локаторами Playwright: он занимает тот же поток и искажает замер.
-        timings.push(
-          await page.evaluate(async (query) => {
-            const input = document.querySelector<HTMLInputElement>('input[placeholder="Поиск задач"]')!;
-            const setValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!;
-            const type = (value: string) => {
-              setValue.call(input, value);
-              input.dispatchEvent(new Event('input', { bubbles: true }));
-            };
-            type('');
-            await new Promise((r) => setTimeout(r, 1500)); // обычный список отрисовался
-            performance.clearMeasures('moy-ritm:search');
-            return new Promise<number>((done) => {
-              const observer = new PerformanceObserver((list) => {
-                const entry = list.getEntriesByName('moy-ritm:search')[0];
-                if (entry) {
-                  observer.disconnect();
-                  done(entry.duration);
-                }
+    test('@perf 5 000 задач: от окончания задержки ввода до показа результатов ≤ 100 мс (п. 15.2)', async ({ page, browserName }) => {
+      test.skip(browserName !== 'chromium', 'замеры и CDP — в Chromium');
+      test.setTimeout(240_000);
+      const dir = resolve('test-results/fixtures');
+      mkdirSync(dir, { recursive: true });
+      const file = resolve(dir, 'search-5000.json');
+      execFileSync('node', ['scripts/seed.mjs', '--tasks', '5000', '--checks', '0', '--habits', '0', '--out', file]);
+      await createProfile(page);
+      await openSettings(page);
+      await chooseBackupFile(page, 'Восстановить из копии', { name: 'search-5000.json', buffer: readFileSync(file) });
+      await page.getByRole('dialog', { name: 'Восстановить из копии?' }).getByRole('button', { name: 'Восстановить' }).click();
+      await expect(page.getByRole('heading', { level: 1, name: 'Настройки' })).toBeVisible({ timeout: 30_000 });
+      await openToday(page);
+      await expect(search(page)).toBeVisible();
+
+      const measureSearch = async (label: string) => {
+        const timings: number[] = [];
+        // Первый запрос — прогрев (JIT); сравниваем медиану трёх замеров, как в бенчмарке обслуживания дня.
+        for (const q of ['номер 7', 'номер 12', 'НОМЕР 4', 'номер 999']) {
+          // Замер самого приложения (performance.measure 'moy-ritm:search'): от конца задержки ввода до кадра с результатами.
+          // Ввод — внутри страницы, без опроса локаторами Playwright: он занимает тот же поток и искажает замер.
+          timings.push(
+            await page.evaluate(async (query) => {
+              const input = document.querySelector<HTMLInputElement>('input[placeholder="Поиск задач"]')!;
+              const setValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!;
+              const type = (value: string) => {
+                setValue.call(input, value);
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+              };
+              type('');
+              await new Promise((r) => setTimeout(r, 1500)); // обычный список отрисовался
+              performance.clearMeasures('moy-ritm:search');
+              return new Promise<number>((done) => {
+                const observer = new PerformanceObserver((list) => {
+                  const entry = list.getEntriesByName('moy-ritm:search')[0];
+                  if (entry) {
+                    observer.disconnect();
+                    done(entry.duration);
+                  }
+                });
+                observer.observe({ type: 'measure' });
+                type(query);
               });
-              observer.observe({ type: 'measure' });
-              type(query);
-            });
-          }, q),
-        );
+            }, q),
+          );
+        }
+        const measured = timings.slice(1);
+        const median = [...measured].sort((a, b) => a - b)[1]!;
+        console.log(`Поиск по 5 000 задач после задержки, ${label}, мс: ${measured.map((t) => t.toFixed(1)).join(', ')}; медиана ${median.toFixed(1)}`);
+        return median;
+      };
+      expect(await measureSearch('без замедления'), 'настольное').toBeLessThanOrEqual(perfLimit(100, 200));
+      if (PERF_STRICT) {
+        // Мобильный профиль: замедление CPU ×4 (эталон п. 15.2).
+        const cdp = await page.context().newCDPSession(page);
+        await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+        const med = await measureSearch('CPU ×4');
+        expect(med, 'мобильное').toBeLessThanOrEqual(100);
+        await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
       }
-      const measured = timings.slice(1);
-      const median = [...measured].sort((a, b) => a - b)[1]!;
-      console.log(`Поиск по 5 000 задач после задержки, ${label}, мс: ${measured.map((t) => t.toFixed(1)).join(', ')}; медиана ${median.toFixed(1)}`);
-      return median;
-    };
-    expect(await measureSearch('без замедления'), 'настольное').toBeLessThanOrEqual(perfLimit(100, 200));
-    if (PERF_STRICT) {
-      // Мобильный профиль: замедление CPU ×4 (эталон п. 15.2).
-      const cdp = await page.context().newCDPSession(page);
-      await cdp.send('Emulation.setCPUThrottlingRate', { rate: 4 });
-      const med = await measureSearch('CPU ×4');
-      expect(med, 'мобильное').toBeLessThanOrEqual(100);
-      await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
-    }
 
-    // Порции дорисовываются до конца: строк столько, сколько найдено.
-    await search(page).fill('номер 4');
-    await expect(announcer(page)).toHaveText(/^Найдено задач: \d{4}$/);
-    const found = Number((await announcer(page).textContent())!.replace(/\D/g, ''));
-    await expect(page.getByTestId('search-results').getByTestId('task')).toHaveCount(found);
+      // Порции дорисовываются до конца: строк столько, сколько найдено.
+      await search(page).fill('номер 4');
+      await expect(announcer(page)).toHaveText(/^Найдено задач: \d{4}$/);
+      const found = Number((await announcer(page).textContent())!.replace(/\D/g, ''));
+      await expect(page.getByTestId('search-results').getByTestId('task')).toHaveCount(found);
+    });
   });
 });
 

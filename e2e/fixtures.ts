@@ -1,10 +1,29 @@
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { test as base, expect, type Locator, type Page } from '@playwright/test';
 
 /**
  * Общая фикстура: любая ошибка в консоли браузера или необработанное исключение
  * (включая нарушения CSP) валит тест — DoD п. 16.7.
  */
-export const test = base.extend<{ consoleErrors: string[] }>({
+export const test = base.extend<{ consoleErrors: string[]; realProfile: boolean }>({
+  /**
+   * Замеры п. 15.2 — в обычном профиле браузера, как у пользователя. Контекст Playwright по умолчанию — аналог
+   * инкогнито: там IndexedDB живёт в памяти и пишет в разы медленнее (30 000 записей: 34 с против 6 с).
+   */
+  realProfile: [false, { option: true }],
+  context: async ({ realProfile, context, playwright, browserName, baseURL, locale, timezoneId, viewport }, use) => {
+    if (!realProfile) {
+      await use(context);
+      return;
+    }
+    const dir = mkdtempSync(join(tmpdir(), 'moy-ritm-profile-'));
+    const persistent = await playwright[browserName].launchPersistentContext(dir, { baseURL, locale, timezoneId, viewport });
+    await use(persistent);
+    await persistent.close();
+    rmSync(dir, { recursive: true, force: true });
+  },
   consoleErrors: [
     async ({ page }, use) => {
       const errors: string[] = [];

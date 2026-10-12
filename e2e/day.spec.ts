@@ -241,78 +241,82 @@ test.describe('обслуживание дня (п. 10.2)', () => {
 
   // Порог п. 15.2 — 300 мс в эталонном окружении (настольный компьютер без замедления). В контейнере CI запись
   // в IndexedDB в 2–3 раза медленнее, поэтому здесь — замер и защита от регрессии; порог сверяется в шаге 7.
-  test('производительность @perf: 500 активных задач и 50 серий — обслуживание дня ≤ 300 мс (п. 15.2)', async ({ page, browserName }) => {
-    test.skip(browserName !== 'chromium', 'замеры — в Chromium');
-    // Без подмены часов: подменённые часы Playwright отключают performance.measure. Даты — от настоящего «сегодня».
-    const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    const real = new Date();
-    const YESTERDAY = iso(new Date(real.getFullYear(), real.getMonth(), real.getDate() - 1));
-    const GENERATED = iso(new Date(real.getFullYear(), real.getMonth(), real.getDate() + 12));
-    const sample = JSON.parse(readFileSync(resolve('fixtures/backups/sample.json'), 'utf8'));
-    const d = sample.data;
-    const userId = d.profile.id;
-    const now = new Date(real.getTime() - 86_400_000).toISOString();
-    const base = () => ({ id: randomUUID(), userId, rev: 1, createdAt: now, updatedAt: now, deletedAt: null });
-    const calendarId = d.calendars[0].id;
-    const keys = generateNKeysBetween(null, null, 1200);
-    const series = Array.from({ length: 50 }, (_, i) => ({
-      ...base(),
-      calendarId,
-      title: `Серия ${i}`,
-      note: '',
-      priority: 'normal',
-      categoryId: null,
-      scheduleType: 'date',
-      plannedTime: null,
-      rule: { frequency: 'daily', interval: 1, weekdays: [], monthDay: null },
-      startDate: YESTERDAY,
-      untilDate: null,
-      generatedUntil: GENERATED,
-    }));
-    const task = (title: string, date: string, extra: object = {}) => ({
-      ...base(),
-      calendarId,
-      title,
-      note: '',
-      status: 'active',
-      priority: 'normal',
-      categoryId: null,
-      scheduleType: 'date',
-      plannedDate: date,
-      plannedTime: null,
-      seriesId: null,
-      occurrenceDate: null,
-      isException: false,
-      sortOrder: keys.pop(),
-      autoMoveCount: 0,
-      completedAt: null,
-      ...extra,
+  test.describe('в обычном профиле браузера', () => {
+    test.use({ realProfile: true });
+
+    test('производительность @perf: 500 активных задач и 50 серий — обслуживание дня ≤ 300 мс (п. 15.2)', async ({ page, browserName }) => {
+      test.skip(browserName !== 'chromium', 'замеры — в Chromium');
+      // Без подмены часов: подменённые часы Playwright отключают performance.measure. Даты — от настоящего «сегодня».
+      const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const real = new Date();
+      const YESTERDAY = iso(new Date(real.getFullYear(), real.getMonth(), real.getDate() - 1));
+      const GENERATED = iso(new Date(real.getFullYear(), real.getMonth(), real.getDate() + 12));
+      const sample = JSON.parse(readFileSync(resolve('fixtures/backups/sample.json'), 'utf8'));
+      const d = sample.data;
+      const userId = d.profile.id;
+      const now = new Date(real.getTime() - 86_400_000).toISOString();
+      const base = () => ({ id: randomUUID(), userId, rev: 1, createdAt: now, updatedAt: now, deletedAt: null });
+      const calendarId = d.calendars[0].id;
+      const keys = generateNKeysBetween(null, null, 1200);
+      const series = Array.from({ length: 50 }, (_, i) => ({
+        ...base(),
+        calendarId,
+        title: `Серия ${i}`,
+        note: '',
+        priority: 'normal',
+        categoryId: null,
+        scheduleType: 'date',
+        plannedTime: null,
+        rule: { frequency: 'daily', interval: 1, weekdays: [], monthDay: null },
+        startDate: YESTERDAY,
+        untilDate: null,
+        generatedUntil: GENERATED,
+      }));
+      const task = (title: string, date: string, extra: object = {}) => ({
+        ...base(),
+        calendarId,
+        title,
+        note: '',
+        status: 'active',
+        priority: 'normal',
+        categoryId: null,
+        scheduleType: 'date',
+        plannedDate: date,
+        plannedTime: null,
+        seriesId: null,
+        occurrenceDate: null,
+        isException: false,
+        sortOrder: keys.pop(),
+        autoMoveCount: 0,
+        completedAt: null,
+        ...extra,
+      });
+      const tasks = [
+        ...Array.from({ length: 500 }, (_, i) => task(`Задача ${i}`, YESTERDAY)),
+        ...series.map((s) => task(s.title, YESTERDAY, { seriesId: s.id, occurrenceDate: YESTERDAY })),
+      ];
+      const backup = {
+        ...sample,
+        data: { ...d, tasks, taskSeries: series, taskMoves: [], habits: [], habitSchedules: [], habitChecks: [], settings: { ...d.settings, lastMaintenanceDate: YESTERDAY } },
+      };
+      await createProfile(page);
+      // Бенчмарк: три восстановления фикстуры, после каждого — обслуживание дня; сравниваем медиану с порогом.
+      for (let run = 0; run < 3; run++) {
+        await openSettings(page);
+        await chooseBackupFile(page, 'Восстановить из копии', { name: 'maintenance.json', buffer: Buffer.from(JSON.stringify(backup)) });
+        await page.getByRole('dialog', { name: 'Восстановить из копии?' }).getByRole('button', { name: 'Восстановить' }).click();
+        await expect(page.locator('.toast-region')).toContainText('Данные восстановлены из резервной копии');
+        // Сразу после восстановления выполняется обслуживание дня: 500 переносов, 50 пропусков, экземпляры на 14-й день.
+        await openToday(page);
+        await expect(caption(page)).toHaveText('0 из 500 задач', { timeout: 15_000 });
+      }
+      const durations = await page.evaluate(() => performance.getEntriesByName('moy-ritm:maintenance').map((e) => e.duration));
+      const runs = durations.slice(-3);
+      const median = [...runs].sort((a, b) => a - b)[1]!;
+      console.log(`Обслуживание дня (500 задач, 50 серий), мс: ${runs.map((x) => x.toFixed(0)).join(', ')}; медиана ${median.toFixed(0)}`);
+      expect(runs).toHaveLength(3);
+      expect(median).toBeLessThanOrEqual(perfLimit(300, 1000));
     });
-    const tasks = [
-      ...Array.from({ length: 500 }, (_, i) => task(`Задача ${i}`, YESTERDAY)),
-      ...series.map((s) => task(s.title, YESTERDAY, { seriesId: s.id, occurrenceDate: YESTERDAY })),
-    ];
-    const backup = {
-      ...sample,
-      data: { ...d, tasks, taskSeries: series, taskMoves: [], habits: [], habitSchedules: [], habitChecks: [], settings: { ...d.settings, lastMaintenanceDate: YESTERDAY } },
-    };
-    await createProfile(page);
-    // Бенчмарк: три восстановления фикстуры, после каждого — обслуживание дня; сравниваем медиану с порогом.
-    for (let run = 0; run < 3; run++) {
-      await openSettings(page);
-      await chooseBackupFile(page, 'Восстановить из копии', { name: 'maintenance.json', buffer: Buffer.from(JSON.stringify(backup)) });
-      await page.getByRole('dialog', { name: 'Восстановить из копии?' }).getByRole('button', { name: 'Восстановить' }).click();
-      await expect(page.locator('.toast-region')).toContainText('Данные восстановлены из резервной копии');
-      // Сразу после восстановления выполняется обслуживание дня: 500 переносов, 50 пропусков, экземпляры на 14-й день.
-      await openToday(page);
-      await expect(caption(page)).toHaveText('0 из 500 задач', { timeout: 15_000 });
-    }
-    const durations = await page.evaluate(() => performance.getEntriesByName('moy-ritm:maintenance').map((e) => e.duration));
-    const runs = durations.slice(-3);
-    const median = [...runs].sort((a, b) => a - b)[1]!;
-    console.log(`Обслуживание дня (500 задач, 50 серий), мс: ${runs.map((x) => x.toFixed(0)).join(', ')}; медиана ${median.toFixed(0)}`);
-    expect(runs).toHaveLength(3);
-    expect(median).toBeLessThanOrEqual(perfLimit(300, 1000));
   });
 });
 

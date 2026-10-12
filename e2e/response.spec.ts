@@ -2,6 +2,8 @@ import { createProfile, expect, test } from './fixtures';
 
 // Отклик (п. 15.2): ≤ 100 мс от действия до видимого изменения, INP ≤ 200 мс. Performance API — только в Chromium.
 test.describe('отклик на добавление и отметку (п. 15.2)', () => {
+  test.use({ realProfile: true });
+
   test.skip(({ browserName }) => browserName !== 'chromium', 'Event Timing API — в Chromium');
 
   test('@perf добавление задачи и отметки задачи и привычки: ≤ 100 мс до изменения, INP ≤ 200 мс', async ({ page }) => {

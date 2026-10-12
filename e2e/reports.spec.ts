@@ -232,6 +232,8 @@ async function measureReports(page: Page, label: string, limit: number) {
 // Скорость IndexedDB в контейнерах CI сильно плавает (между двумя контейнерами одного дня — в 1,5–2 раза), поэтому здесь
 // замер и защита от грубой регрессии: 2 000 мс без замедления и 3 000 мс при замедлении CPU ×4.
 test.describe('производительность отчётов (п. 15.2)', () => {
+  test.use({ realProfile: true });
+
   test('@perf 10 000 задач и 20 000 отметок: ≤ 500 мс без замедления, ≤ 1 000 мс при CPU ×4', async ({ page, browserName }) => {
     test.skip(browserName !== 'chromium', 'замеры и CDP — в Chromium');
     test.setTimeout(240_000);
