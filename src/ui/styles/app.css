@@ -300,8 +300,9 @@ dialog.dialog::backdrop { background: rgba(22, 24, 26, 0.55); }
 .btn-link { min-height: var(--tap); font: 600 15px/1.2 var(--font-body); cursor: pointer; }
 
 .segmented { display: flex; flex-wrap: wrap; gap: 6px; }
-.segment { position: relative; }
-.segment input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.segment { position: relative; display: inline-flex; }
+/* Поле на всю «таблетку»: Safari не растягивает радиокнопку по inset, поэтому размеры заданы явно. */
+.segment input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; appearance: none; }
 .segment span {
   display: inline-flex; align-items: center; min-height: var(--tap); padding: 0 var(--space-3);
   border: 1.5px solid var(--color-border); border-radius: var(--radius-s);
@@ -424,7 +425,7 @@ select.input { appearance: auto; }
 .repeat-fields { display: flex; flex-direction: column; gap: var(--space-2); }
 .weekdays { display: flex; flex-wrap: wrap; gap: var(--space-2); border: none; margin: 0; padding: 0; min-width: 0; }
 .weekday { position: relative; display: inline-flex; }
-.weekday input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.weekday input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; margin: 0; cursor: pointer; appearance: none; }
 .weekday span {
   display: inline-flex; align-items: center; justify-content: center; min-width: var(--tap); min-height: var(--tap);
   border: 1.5px solid var(--color-border); border-radius: var(--radius-s); font-weight: 600; padding: 0 var(--space-2); background: var(--color-surface); color: #3b3e38;
