@@ -130,9 +130,8 @@ function ReminderWatcher({ services }: { services: Services }) {
   useEffect(() => {
     if (status !== 'ready') return;
     let running = false;
-    const check = async () => {
-      if (running) return;
-      running = true;
+    let again = false;
+    const once = async () => {
       try {
         const { setReminder, setReminderDay } = useAppStore.getState();
         if (await services.reminder.shownToday()) setReminderDay(services.clock.today());
@@ -143,9 +142,20 @@ function ReminderWatcher({ services }: { services: Services }) {
         }
       } catch {
         // Уведомление необязательно: ошибка чтения не мешает работе (п. 15.5).
-      } finally {
-        running = false;
       }
+    };
+    // Запрос, пришедший во время проверки (таймер после сна, focus), не теряется: проверка повторяется с новым временем.
+    const check = async () => {
+      if (running) {
+        again = true;
+        return;
+      }
+      running = true;
+      do {
+        again = false;
+        await once();
+      } while (again);
+      running = false;
     };
     const onVisibility = () => {
       if (document.visibilityState === 'visible') void check();
